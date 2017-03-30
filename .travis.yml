@@ -1,0 +1,27 @@
+language: cpp
+os:
+  - osx
+  - linux
+sudo: required
+dist: trusty
+compiler:
+  - clang
+  - gcc
+env:
+  - CTEST_OUTPUT_ON_FAILURE=ON
+
+addons:
+  apt:
+    packages:
+      - ninja-build
+
+before_install:
+  - if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then brew update && brew install ninja; fi
+
+before_script:
+  - cmake -E make_directory build
+
+script:
+  - cmake -E chdir build cmake -G Ninja ..
+  - cmake --build build
+  - cmake --build build --target test
