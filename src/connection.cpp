@@ -12,8 +12,6 @@
 inline void close(SOCKET fd) {
   closesocket(fd);
 }
-#define MSG_MORE 0
-#define MSG_NOSIGNAL 0
 #else
 #include <unistd.h>
 #include <sys/socket.h>
@@ -22,6 +20,14 @@ inline void close(SOCKET fd) {
 #include <netinet/tcp.h>
 
 #define SOCKET int
+#endif
+
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+#ifndef MSG_MORE
+#define MSG_MORE 0
 #endif
 
 bool writesocket(SOCKET fd, const void *buf, size_t bytes, bool lastWrite = true) {

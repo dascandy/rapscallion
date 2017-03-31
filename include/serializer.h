@@ -1,11 +1,12 @@
 #ifndef SERIALIZER_H
 #define SERIALIZER_H
 
-#include <cstdint>
-#include <vector>
-#include <string>
 #include <algorithm>
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 struct Serializer {
   Serializer(std::vector<uint8_t> *buffer)
@@ -94,10 +95,6 @@ struct reader<std::vector<T> > {
   }
 };
 
-namespace std {
-  template <typename T>
-  class shared_ptr;
-}
 template <typename T>
 struct writer<std::shared_ptr<T>> {
   static void write(Serializer& s, const std::shared_ptr<T> &p) {
