@@ -3,7 +3,6 @@
 #include <vector>
 #include "serializer.h"
 #include <cstring>
-#include "log.h"
 #include "rpc.h"
 
 #ifdef _WIN32
@@ -57,7 +56,7 @@ Connection::Connection(std::string server, std::string port)
   fd = socket(addrinfos->ai_family, addrinfos->ai_socktype, addrinfos->ai_protocol);
   int nodelay = 1;
   setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
-  connect(fd, addrinfos->ai_addr, result->ai_addrlen);
+  connect(fd, addrinfos->ai_addr, addrinfos->ai_addrlen);
   freeaddrinfo(addrinfos);
   sendInterfaces();
 }
@@ -160,13 +159,13 @@ void Connection::Handle(Serializer& s) {
   } else if (intf[0] == 'd') {
     IHasDispatch *disp = dispatchers()[intf];
     if (!disp)
-      LOG_ERROR("Received call for unknown interface %s\n", intf.c_str());
+      printf("Received call for unknown interface %s\n", intf.c_str());
     else
       disp->dispatch(s, shared_from_this());
   } else {
     std::shared_ptr<IProxy> psb = proxies[intf.substr(1)];
     if (!psb) {
-      LOG_ERROR("No proxy for %s\n", intf.c_str());
+      printf("No proxy for %s\n", intf.c_str());
       return;
     }
     psb->dispatch(s);
