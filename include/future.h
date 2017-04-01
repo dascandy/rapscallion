@@ -6,6 +6,7 @@
 #include <memory>
 #include <exception>
 #include <vector>
+#include <type_traits>
 #include <utility>
 #include <condition_variable>
 
@@ -52,19 +53,16 @@ struct promise_already_satisfied : promise_exception {};
 template <typename T>
 class shared_state {
 public:
-  shared_state()
-  : storage(NULL)
-  {
-  }
   ~shared_state()
   {
-    delete storage;
+    if (value_set)
+      reinterpret_cast<T*>(&storage)->~T();
   }
   void set(T &&value) {
     std::unique_lock<std::mutex> lk(m);
     if (value_set)
       throw promise_already_satisfied();
-    storage = new T(std::move(value));
+    new (&storage) T(std::move(value));
     value_set = true;
     cv.notify_all();
     for (const auto &p : cbs)
@@ -75,7 +73,7 @@ public:
     std::unique_lock<std::mutex> lk(m);
     if (value_set)
       throw promise_already_satisfied();
-    storage = new T(value);
+    new (&storage) T(value);
     value_set = true;
     cv.notify_all();
     for (const auto &p : cbs)
@@ -98,7 +96,7 @@ public:
     cv.wait(lk, [this]{ return value_set; });
     if (eptr)
       std::rethrow_exception(eptr);
-    return *storage;
+    return *reinterpret_cast<T*>(&storage);
   }
   void then(std::function<void()> cb, executor *exec) {
     std::unique_lock<std::mutex> lk(m);
@@ -108,7 +106,7 @@ public:
       cbs.push_back(std::make_pair(exec, cb));
   }
   std::vector<std::pair<executor*, std::function<void()>>> cbs;
-  T *storage;
+  typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type storage;
   std::exception_ptr eptr;
   mutable std::mutex m;
   mutable std::condition_variable cv;
