@@ -47,6 +47,8 @@ public:
 struct promise_exception : public std::exception {
 };
 
+struct promise_already_satisfied : promise_exception {};
+
 template <typename T>
 class shared_state {
 public:
@@ -60,6 +62,8 @@ public:
   }
   void set(T &&value) {
     std::unique_lock<std::mutex> lk(m);
+    if (value_set)
+      throw promise_already_satisfied();
     storage = new T(std::move(value));
     value_set = true;
     cv.notify_all();
@@ -69,6 +73,8 @@ public:
   }
   void set(const T &value) {
     std::unique_lock<std::mutex> lk(m);
+    if (value_set)
+      throw promise_already_satisfied();
     storage = new T(value);
     value_set = true;
     cv.notify_all();
@@ -78,6 +84,8 @@ public:
   }
   void set_error(std::exception_ptr eptr) {
     std::unique_lock<std::mutex> lk(m);
+    if (value_set)
+      throw promise_already_satisfied();
     this->eptr = eptr;
     value_set = true;
     cv.notify_all();
@@ -112,6 +120,8 @@ struct shared_state<void> {
 public:
   void set() {
     std::unique_lock<std::mutex> lk(m);
+    if (value_set)
+      throw promise_already_satisfied();
     value_set = true;
     cv.notify_all();
     for (const auto &p : cbs)
@@ -120,6 +130,8 @@ public:
   }
   void set_error(std::exception_ptr eptr) {
     std::unique_lock<std::mutex> lk(m);
+    if (value_set)
+      throw promise_already_satisfied();
     this->eptr = eptr;
     value_set = true;
     cv.notify_all();
