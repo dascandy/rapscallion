@@ -1,4 +1,5 @@
 #include "serializer.h"
+#include <cstdlib>
 
 void writer<size_t>::write(Serializer& s, const size_t &val) {
   size_t value = val;
@@ -9,7 +10,7 @@ void writer<size_t>::write(Serializer& s, const size_t &val) {
   s.buffer->push_back((uint8_t)value);
 }
 void writer<long>::write(Serializer& s, const long &v) {
-  size_t val = (abs(v) << 1) | (v < 0 ? 1 : 0);
+  size_t val = (std::abs(v) << 1) | (v < 0 ? 1 : 0);
   writer<size_t>::write(s, val);
 }
 void writer<int>::write(Serializer& s, const int &v) {
