@@ -1,7 +1,6 @@
 # rapscallion
 
 [![Linux and OSX build status](https://travis-ci.org/dascandy/rapscallion.svg)](https://travis-ci.org/dascandy/rapscallion)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/86eey92bhssv6ct5/branch/master?svg=true)](https://ci.appveyor.com/project/muggenhor/rapscallion/branch/master)
 
 C++ RPC using C++17 futures
 
