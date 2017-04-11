@@ -1,69 +1,85 @@
 #ifndef FUTURE_H
 #define FUTURE_H
 
-#include <mutex>
-#include <condition_variable>
+#include <future>
 #include <memory>
-#include <exception>
 #include <type_traits>
-
-struct promise_exception : public std::exception {
-};
-
-struct promise_already_satisfied : promise_exception {};
 
 template <typename T>
 class result {
 public:
+  result(result&& rhs)
+    : promise_made(rhs.promise_made)
+  {
+    if (rhs.promise_made) {
+      new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
+    }
+  }
+
+  result& operator=(result&& rhs)
+  {
+    if (rhs.promise_made)
+    {
+      if (promise_made)
+      {
+        promise_ref() = std::move(rhs.promise_ref());
+      }
+      else
+      {
+        new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
+        promise_made = true;
+      }
+    }
+    else
+    {
+      destroy();
+    }
+
+    return *this;
+  }
+
   ~result()
   {
-    if (value_set)
-      reinterpret_cast<T*>(&storage)->~T();
+    destroy();
   }
-  void set(T &&value) {
-    std::unique_lock<std::mutex> lk(m);
-    if (value_set)
-      throw promise_already_satisfied();
-    new (&storage) T(std::move(value));
-    value_set = true;
-    cv.notify_all();
-    for (const auto &p : cbs)
-      p.first->async(p.second);
-    cbs.clear();
+
+  std::future<T> get_local() {
+    if (!promise_made) {
+      new (&storage) std::promise<T>();
+      promise_made = true;
+      // TODO: signal to the remote that we actually wish to receive the value associated with this.
+    }
+
+    return promise_ref().get_future();
   }
-  void set_error(std::exception_ptr eptr) {
-    std::unique_lock<std::mutex> lk(m);
-    if (value_set)
-      throw promise_already_satisfied();
-    this->eptr = eptr;
-    value_set = true;
-    cv.notify_all();
-    for (const auto &p : cbs)
-      p.first->async(p.second);
-    cbs.clear();
+
+private:
+  void destroy()
+  {
+    if (promise_made) {
+      promise_ref().~promise<T>();
+      promise_made = false;
+    }
   }
-  const T& get() {
-    std::unique_lock<std::mutex> lk(m);
-    cv.wait(lk, [this]{ return value_set; });
-    if (eptr)
-      std::rethrow_exception(eptr);
-    return *reinterpret_cast<T*>(&storage);
+
+  std::promise<T>& promise_ref()
+  {
+    return *reinterpret_cast<std::promise<T>*>(&storage);
   }
-  typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type storage;
-  std::exception_ptr eptr;
-  mutable std::mutex m;
-  mutable std::condition_variable cv;
-  bool value_set = false;
+
+private:
+  typename std::aligned_storage<sizeof(std::promise<T>), std::alignment_of<std::promise<T>>::value>::type storage;
+  bool promise_made = false;
 };
 
 template <typename T>
 class handle {
 public:
-  const T& get() const {
-    return state->get();
+  std::future<T> get_local() {
+    return state->get_local();
   }
 private:
-  handle(std::shared_ptr<result<T>> state) : state(state) {}
+  handle(std::shared_ptr<result<T>> state) : state(std::move(state)) {}
   std::shared_ptr<result<T>> state;
 };
 
