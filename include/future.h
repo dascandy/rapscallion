@@ -27,9 +27,6 @@ public:
     new (&storage) T(std::move(value));
     value_set = true;
     cv.notify_all();
-    for (const auto &p : cbs)
-      p.first->async(p.second);
-    cbs.clear();
   }
   void set_error(std::exception_ptr eptr) {
     std::unique_lock<std::mutex> lk(m);
@@ -38,9 +35,6 @@ public:
     this->eptr = eptr;
     value_set = true;
     cv.notify_all();
-    for (const auto &p : cbs)
-      p.first->async(p.second);
-    cbs.clear();
   }
   const T& get() {
     std::unique_lock<std::mutex> lk(m);
