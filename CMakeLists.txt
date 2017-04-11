@@ -6,6 +6,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(RapSCallion)
 
+find_package(Boost 1.38 REQUIRED)
+
 add_library(RapSCallion SHARED
   include/connection.h
   include/future.h
@@ -20,4 +22,8 @@ set_target_properties(RapSCallion PROPERTIES OUTPUT_NAME rapscallion)
 target_include_directories(RapSCallion
   PUBLIC
     include
+)
+target_link_libraries(RapSCallion
+  PUBLIC
+    Boost::boost
 )
