@@ -59,6 +59,7 @@ struct handle_promise<expected<void, remote_exception_ptr<E...>>> {
 
 struct result_base
 {
+  virtual ~result_base() = default;
   virtual void deserialize_from(Serializer&) = 0;
 };
 
