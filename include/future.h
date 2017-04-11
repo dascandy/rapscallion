@@ -8,41 +8,14 @@
 template <typename T>
 class result {
 public:
-  result(result&& rhs)
-    : promise_made(rhs.promise_made)
-  {
-    if (rhs.promise_made) {
-      new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
-    }
-  }
-
-  result& operator=(result&& rhs)
-  {
-    if (rhs.promise_made)
-    {
-      if (promise_made)
-      {
-        promise_ref() = std::move(rhs.promise_ref());
-      }
-      else
-      {
-        new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
-        promise_made = true;
-      }
-    }
-    else
-    {
-      destroy();
-    }
-
-    return *this;
-  }
-
+  result(result&& rhs) = delete;
+  result& operator=(result&& rhs) = delete;
   ~result()
   {
-    destroy();
+    if (promise_made) {
+      promise_ref().~promise<T>();
+    }
   }
-
   std::future<T> get_local() {
     if (!promise_made) {
       new (&storage) std::promise<T>();
@@ -54,14 +27,6 @@ public:
   }
 
 private:
-  void destroy()
-  {
-    if (promise_made) {
-      promise_ref().~promise<T>();
-      promise_made = false;
-    }
-  }
-
   std::promise<T>& promise_ref()
   {
     return *reinterpret_cast<std::promise<T>*>(&storage);
