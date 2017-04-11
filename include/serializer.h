@@ -46,7 +46,7 @@ struct Serializer {
       mask = 0x80;
     }
     buffer[offs] = len | mask;
-    return std::make_pair(buffer.data() + offs, len - offs);
+    return std::make_pair(buffer.data() + offs, buffer.size() - offs);
   }
 };
 

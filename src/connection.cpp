@@ -18,10 +18,10 @@
 #define MSG_MORE 0
 #endif
 
-bool writesocket(int fd, const void *buf, size_t bytes, bool lastWrite = true) {
+bool writesocket(int fd, const void *buf, size_t bytes) {
   const char *sb = (const char *)buf;
   do {
-    int written = send(fd, sb, (int)bytes, MSG_NOSIGNAL | (lastWrite ? 0 : MSG_MORE));
+    int written = send(fd, sb, (int)bytes, MSG_NOSIGNAL | 0);
     if (written < 0) {
       return false;
     } else {
@@ -76,10 +76,8 @@ void Connection::Stop() {
 void Connection::send(Serializer& s) {
   if (stopped) return;
   std::unique_lock<std::mutex> lock(m);
-  Serializer ss;
-  write(ss, s.buffer->size());
-  if (!::writesocket(fd, ss.buffer->data(), ss.buffer->size(), false) ||
-      !::writesocket(fd, s.buffer->data(), s.buffer->size(), true))
+  const auto& buffer = s.data();
+  if (!::writesocket(fd, buffer.first, buffer.second))
     Stop();
 }
 
