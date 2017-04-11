@@ -31,7 +31,6 @@ struct Deserializer {
     }
     return -1;
   }
-private:
   const uint8_t *ptr, *end;
 };
 
@@ -65,7 +64,7 @@ struct parse_exception : public std::exception {
 #define DECLARE_READER_WRITER(type) \
 template <> \
 struct reader<type> { \
-  static type read(Serializer& s); \
+  static type read(Deserializer& s); \
 }; \
 template <> \
 struct writer<type> { \
@@ -95,7 +94,7 @@ struct writer<optional<T> > {
 };
 template <typename T>
 struct reader<optional<T> > {
-  static optional<T> read(Serializer& s) {
+  static optional<T> read(Deserializer& s) {
     optional<T> val;
     bool isNotNull = reader<bool>::read(s);
     if (isNotNull) {
@@ -116,7 +115,7 @@ struct writer<std::vector<T> > {
 };
 template <typename T>
 struct reader<std::vector<T> > {
-  static std::vector<T> read(Serializer& s) {
+  static std::vector<T> read(Deserializer& s) {
     std::vector<T> t;
     size_t size = reader<size_t>::read(s);
     t.reserve(size);
@@ -138,7 +137,7 @@ struct writer<std::shared_ptr<T>> {
 };
 template <typename T>
 struct reader<std::shared_ptr<T>> {
-  static std::shared_ptr<T> read(Serializer& s) {
+  static std::shared_ptr<T> read(Deserializer& s) {
     bool isNotNull = reader<bool>::read(s);
     if (isNotNull) {
       return std::make_shared<T>(reader<T>::read(s));
@@ -154,7 +153,7 @@ void write(Serializer& s, T value) {
 }
 
 template <typename T>
-T read(Serializer& s) {
+T read(Deserializer& s) {
   return reader<T>::read(s);
 }
 
