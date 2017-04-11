@@ -45,20 +45,6 @@ class IProxy;
 class IHasDispatch;
 class Connection;
 
-template <typename T>
-struct handle_promise {
-  static void handle(std::shared_ptr<promise<T>> value, Serializer& s) {
-      value->set_value(reader<T>::read(s));
-  }
-};
-
-template <>
-struct handle_promise<void> {
-  static void handle(std::shared_ptr<promise<void>> value, Serializer& ) {
-    value->set_value();
-  }
-};
-
 class IProxy : public std::enable_shared_from_this<IProxy> {
 public:
   virtual void signalDisconnect() = 0;
