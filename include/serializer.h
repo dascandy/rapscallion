@@ -11,10 +11,22 @@
 struct Deserializer {
   Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
   : ptr(buffer.data() + offset)
-  , end(ptr + PacketSize(buffer, offset))
-  {}
+  {
+  }
   uint8_t *ptr, *end;
-  static size_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
+  size_t getByte() {
+    if (ptr == end) throw std::runtime_error("Exceeded packet size");
+    return *ptr++;
+  }
+  static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
+    int64_t len = 0;
+    while (offs < vec.size()) {
+      len = (len << 7) + (vec[offs] & 0x7F);
+      if ((vec[offs] & 0x80) == 0)
+        return len;
+      offs++;
+    }
+    return -1;
   }
 };
 
@@ -27,11 +39,13 @@ struct Serializer {
   std::pair<uint8_t *, size_t> data() {
     size_t len = buffer.size() - 8;
     size_t offs = 7;
+    int mask = 0;
     while (len > 0x7F) {
-      buffer[offs--] = 0x80 | (len & 0x7F);
+      buffer[offs--] = mask | (len & 0x7F);
       len >>= 7;
+      mask = 0x80;
     }
-    buffer[offs] = len;
+    buffer[offs] = len | mask;
     return std::make_pair(buffer.data() + offs, len - offs);
   }
 };
