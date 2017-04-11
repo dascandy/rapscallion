@@ -83,7 +83,6 @@ void Connection::send(Serializer& s) {
 
 void Connection::receive() {
   uint8_t buffer[1024];
-  Serializer s;
 
   fd_set fds;
   try {
@@ -104,9 +103,9 @@ void Connection::receive() {
 
       receiveBuffer.insert(receiveBuffer.end(), buffer, buffer+bytesRead);
       size_t offset = 0;
-      while (Serializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
-        Serializer s(receiveBuffer, offset);
-        offset += Serializer::PacketSize(receiveBuffer, offset);
+      while (Deserializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
+        Deserializer s(receiveBuffer, offset);
+        offset += Deserializer::PacketSize(receiveBuffer, offset);
         // TODO: handle packet
       }
     }

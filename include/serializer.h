@@ -12,8 +12,11 @@ struct Deserializer {
   Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
   : ptr(buffer.data() + offset)
   {
+    uint64_t size = PacketSize(buffer, offset);
+    while (*ptr & 0x80) ptr++;
+    ptr++;
+    end = ptr + size;
   }
-  uint8_t *ptr, *end;
   size_t getByte() {
     if (ptr == end) throw std::runtime_error("Exceeded packet size");
     return *ptr++;
@@ -28,6 +31,8 @@ struct Deserializer {
     }
     return -1;
   }
+private:
+  const uint8_t *ptr, *end;
 };
 
 struct Serializer {
