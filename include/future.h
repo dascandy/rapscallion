@@ -12,7 +12,7 @@ public:
     : promise_made(rhs.promise_made)
   {
     if (rhs.promise_made) {
-      new (&storage) std::promise<T>(std::move(*reinterpret_cast<std::promise<T>*>(&rhs.storage)));
+      new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
     }
   }
 
@@ -22,11 +22,11 @@ public:
     {
       if (promise_made)
       {
-        *reinterpret_cast<std::promise<T>*>(&storage) = std::move(*reinterpret_cast<std::promise<T>*>(&rhs.storage));
+        promise_ref() = std::move(rhs.promise_ref());
       }
       else
       {
-        new (&storage) std::promise<T>(std::move(*reinterpret_cast<std::promise<T>*>(&rhs.storage)));
+        new (&storage) std::promise<T>(std::move(rhs.promise_ref()));
         promise_made = true;
       }
     }
@@ -50,16 +50,21 @@ public:
       // TODO: signal to the remote that we actually wish to receive the value associated with this.
     }
 
-    return reinterpret_cast<std::promise<T>*>(&storage)->get_future();
+    return promise_ref().get_future();
   }
 
 private:
   void destroy()
   {
     if (promise_made) {
-      reinterpret_cast<std::promise<T>*>(&storage)->~promise<T>();
+      promise_ref().~promise<T>();
       promise_made = false;
     }
+  }
+
+  std::promise<T>& promise_ref()
+  {
+    return *reinterpret_cast<std::promise<T>*>(&storage);
   }
 
 private:
