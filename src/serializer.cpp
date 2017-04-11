@@ -61,7 +61,7 @@ bool reader<bool>::read(Serializer& s) {
   return reader<size_t>::read(s) > 0;
 }
 
-void Serializer::addBytes(const uint8_t *newbuffer, size_t bytesRead, std::function<void(Serializer&)> onReceive) {
+void Serializer::addBytes(const uint8_t *newbuffer, size_t bytesRead) {
   bool lengthKnown = false;
   for (uint8_t b : *buffer) {
     if ((b & 0x80) == 0) {
@@ -92,9 +92,9 @@ void Serializer::addBytes(const uint8_t *newbuffer, size_t bytesRead, std::funct
     buffer->insert(buffer->end(), newbuffer, newbuffer + bytesToGetFromNewbuffer);
     newbuffer += bytesToGetFromNewbuffer;
     bytesRead -= bytesToGetFromNewbuffer;
-    onReceive(*this);
+//    onReceive(*this);
     buffer->clear();
-    addBytes(newbuffer, bytesRead, onReceive);
+    addBytes(newbuffer, bytesRead);
   } else {
     buffer->insert(buffer->end(), newbuffer, newbuffer + bytesRead);
   }

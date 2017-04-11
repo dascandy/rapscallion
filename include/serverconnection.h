@@ -10,12 +10,6 @@
 
 class Connection;
 
-#ifdef _WIN32
-#define SOCKET void*
-#else
-#define SOCKET int
-#endif
-
 class ServerConnection {
 public:
   ServerConnection(std::string port);
@@ -24,7 +18,7 @@ public:
   std::function<void(std::shared_ptr<Connection>)> onConnection = [](std::shared_ptr<Connection>){};
 private:
   std::atomic<bool> stop;
-  SOCKET fd;
+  int fd;
   int p[2];
   std::vector<std::shared_ptr<Connection>> connections;
   std::thread receiveThread;

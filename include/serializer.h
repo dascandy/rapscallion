@@ -8,19 +8,32 @@
 #include <string>
 #include <vector>
 
-struct Serializer {
-  Serializer(std::vector<uint8_t> *buffer)
-  : buffer(buffer)
+struct Deserializer {
+  Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
+  : ptr(buffer.data() + offset)
+  , end(ptr + PacketSize(buffer, offset))
   {}
+  uint8_t *ptr, *end;
+  static size_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
+  }
+};
+
+struct Serializer {
   Serializer() {
-    buffer = new std::vector<uint8_t>();
+    buffer.resize(8);
   }
-  ~Serializer() {
-    delete buffer;
+  std::vector<uint8_t> buffer;
+  void addByte(uint8_t b) { buffer.push_back(b); }
+  std::pair<uint8_t *, size_t> data() {
+    size_t len = buffer.size() - 8;
+    size_t offs = 7;
+    while (len > 0x7F) {
+      buffer[offs--] = 0x80 | (len & 0x7F);
+      len >>= 7;
+    }
+    buffer[offs] = len;
+    return std::make_pair(buffer.data() + offs, len - offs);
   }
-  void addBytes(const uint8_t *buffer, size_t bytesRead, std::function<void(Serializer&)> onReceive);
-  std::vector<uint8_t> *buffer;
-  size_t offset = 0;
 };
 
 struct parse_exception : public std::exception {

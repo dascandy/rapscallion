@@ -57,7 +57,7 @@ void ServerConnection::run() {
     struct sockaddr_in in;
     memset(&in, 0, sizeof(in));
     socklen_t len = sizeof(in);
-    SOCKET cfd = accept(fd, (struct sockaddr*)&in, &len);
+    int cfd = accept(fd, (struct sockaddr*)&in, &len);
     std::shared_ptr<Connection> conn = std::make_shared<Connection>(cfd);
     connections.push_back(conn);
     onConnection(conn);

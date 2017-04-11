@@ -13,7 +13,6 @@ add_library(RapSCallion SHARED
   include/serializer.h
   include/serverconnection.h
   src/connection.cpp
-  src/future.cpp
   src/serializer.cpp
   src/serverconnection.cpp
 )

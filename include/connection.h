@@ -10,40 +10,25 @@
 #include <vector>
 #include <atomic>
 
-#ifdef _WIN32
-#define SOCKET void*
-#else
-#define SOCKET int
-#endif
-
 struct Serializer;
-class IProxy;
-class IHasDispatch;
 
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
-  Connection(SOCKET fd);
-  Connection(std::string server, std::string port);
-  void startReceive();
+  Connection(int fd);
+  Connection(const std::string& server, const std::string& port);
   ~Connection();
-  void Stop(bool inDestructor = false);
+  void startReceive();
+  void Stop();
   void send(Serializer& s);
   void receive();
-  void Handle(Serializer&s); 
-  std::map<std::string, std::shared_ptr<IProxy>> proxies;
-  template <typename T>
-  std::shared_ptr<T> getProxyFor();
-  void sendInterfaces();
-  SOCKET fd;
-  std::atomic<bool> stopped;
+private:
+  int fd;
   int p[2];
+  std::atomic<bool> stopped;
   std::thread receiveThread;
+  std::vector<uint8_t> receiveBuffer;
   std::mutex m;
   std::condition_variable cv;
-  std::vector<std::string> interfaces;
-  bool haveInterfaces = false;
-  std::function<void(std::shared_ptr<Connection>)> onStop = [](std::shared_ptr<Connection>){};
-  static std::map<std::string, IHasDispatch *> &dispatchers();
 };
 
 #endif
