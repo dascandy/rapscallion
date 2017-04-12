@@ -6,7 +6,9 @@
 #include <memory>
 #include "serializer.h"
 
-struct Serializer;
+// TODO: add an actual implementation of this thing
+template <typename... E>
+struct remote_exception_ptr;
 
 // TODO: add an actual implementation of this thing
 template <typename T, typename E>
@@ -16,7 +18,7 @@ template <typename T>
 struct handle_promise {
   typedef std::promise<T> promise_type;
 
-  void operator()(promise_type& value, Serializer& s) const {
+  void operator()(promise_type& value, Deserializer& s) const {
       value.set_value(reader<T>::read(s));
   }
 };
@@ -24,38 +26,39 @@ struct handle_promise {
 template <>
 struct handle_promise<void> {
   typedef std::promise<void> promise_type;
-  void operator()(promise_type& value, Serializer& ) const {
+  void operator()(promise_type& value, Deserializer& ) const {
     value.set_value();
   }
 };
 
-template <typename T, typename E>
-struct handle_promise<expected<T, E>> {
+template <typename T, typename... E>
+struct handle_promise<expected<T, remote_exception_ptr<E...>>> {
   typedef std::promise<T> promise_type;
-  void operator()(promise_type& value, Serializer& s) const {
-    auto e = reader<expected<T, E>>::read(s);
+  void operator()(promise_type& value, Deserializer& s) const {
+    auto e = reader<expected<T, remote_exception_ptr<E...>>>::read(s);
     if (e)
       value.set_value(*e);
     else
-      value.set_error(e.error());
+      value.set_error(e.error().make_exception_ptr());
   }
 };
 
-template <typename E>
-struct handle_promise<expected<void, E>> {
+template <typename... E>
+struct handle_promise<expected<void, remote_exception_ptr<E...>>> {
   typedef std::promise<void> promise_type;
-  void operator()(promise_type& value, Serializer& s) const {
-    auto e = reader<expected<void, E>>::read(s);
+  void operator()(promise_type& value, Deserializer& s) const {
+    auto e = reader<expected<void, remote_exception_ptr<E...>>>::read(s);
     if (e)
       value.set_value();
     else
-      value.set_exception(e.error());
+      value.set_exception(e.error().make_exception_ptr());
   }
 };
 
 struct result_base
 {
-  virtual void deserialize_from(Serializer&) = 0;
+  virtual ~result_base() = default;
+  virtual void deserialize_from(Deserializer&) = 0;
 };
 
 template <typename T>
@@ -74,7 +77,7 @@ public:
     return promise->get_future();
   }
 
-  void deserialize_from(Serializer& deserializer) override
+  void deserialize_from(Deserializer& deserializer) override
   {
     handle_promise<T>()(*promise, deserializer);
   }
