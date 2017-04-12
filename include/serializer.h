@@ -111,7 +111,7 @@ struct reader<optional<T> > {
 template <typename T>
 struct writer<std::vector<T> > {
   static void write(Serializer& s, const std::vector<T>& value) {
-    writer<size_t>::write(s, value.size());
+    writer<std::uint_least64_t>::write(s, value.size());
     for (const T &v : value) {
       writer<T>::write(s, v);
     }
@@ -121,9 +121,9 @@ template <typename T>
 struct reader<std::vector<T> > {
   static std::vector<T> read(Deserializer& s) {
     std::vector<T> t;
-    size_t size = reader<size_t>::read(s);
+    const auto size = reader<std::uint_least64_t>::read(s);
     t.reserve(size);
-    for (size_t n = 0; n < size; ++n) {
+    for (decltype(+size) n = 0; n < size; ++n) {
       t.push_back(reader<T>::read(s));
     }
     return t;
