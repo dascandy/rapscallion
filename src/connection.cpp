@@ -57,6 +57,7 @@ Connection::Connection(const std::string& server, const std::string& port)
   setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
   connect(fd, addrinfos->ai_addr, addrinfos->ai_addrlen);
   freeaddrinfo(addrinfos);
+  writesocket(fd, header, sizeof(header));
 }
 
 void Connection::startReceive(Callback& cb) {
