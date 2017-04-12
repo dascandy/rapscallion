@@ -13,6 +13,7 @@ env:
 addons:
   apt:
     packages:
+      - libboost-test-dev
       - ninja-build
 
 before_install:

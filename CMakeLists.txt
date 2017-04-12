@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(RaPsCallion CXX)
 
+enable_language(C) # Older CMake versions need this while detecting Boost
 find_package(Boost 1.38 REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -23,10 +24,9 @@ set_target_properties(RaPsCallion PROPERTIES OUTPUT_NAME rapscallion)
 target_include_directories(RaPsCallion
   PUBLIC
     include
+    ${Boost_INCLUDE_DIRS}
 )
 target_link_libraries(RaPsCallion
-  PUBLIC
-    Boost::boost
   PRIVATE
     Threads::Threads
 )
