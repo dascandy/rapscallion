@@ -16,6 +16,8 @@ int main() {
   test(std::numeric_limits<double>::infinity());
   test(-std::numeric_limits<double>::infinity());
   test(std::numeric_limits<double>::quiet_NaN());
+  test(0.0);
+  test(-0.0);
   test(1.0);
   test(-1.0);
   test(2.0);
