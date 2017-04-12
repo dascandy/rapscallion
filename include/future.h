@@ -61,6 +61,7 @@ struct result_base
 template <typename T>
 class result : public result_base {
 public:
+
   result(result&& rhs) = delete;
   result& operator=(result&& rhs) = delete;
 

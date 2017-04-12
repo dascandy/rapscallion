@@ -147,21 +147,6 @@ struct reader<std::shared_ptr<T>> {
   }
 };
 
-template <typename T>
-void write(Serializer& s, T value) {
-  writer<T>::write(s, value);
-}
-
-template <typename T>
-T read(Deserializer& s) {
-  return reader<T>::read(s);
-}
-
-template <typename T>
-void read(Serializer& s, T& value) {
-  value = reader<T>::read(s);
-}
-
 #endif
 
 

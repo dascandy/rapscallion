@@ -53,7 +53,8 @@ Connection::Connection(const std::string& server, const std::string& port)
   freeaddrinfo(addrinfos);
 }
 
-void Connection::startReceive() {
+void Connection::startReceive(Callback& cb) {
+  this->cb = &cb;
   std::shared_ptr<Connection> sharedthis = shared_from_this();
   std::thread readerThread([sharedthis]{ sharedthis->receive(); });
   readerThread.detach();
@@ -106,7 +107,7 @@ void Connection::receive() {
       while (Deserializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
         Deserializer s(receiveBuffer, offset);
         offset += Deserializer::PacketSize(receiveBuffer, offset);
-        // TODO: handle packet
+        cb->onPacket(s);
       }
     }
   } catch (...) {}
