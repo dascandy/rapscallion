@@ -16,6 +16,8 @@ struct Deserializer {
     while (*ptr & 0x80) ptr++;
     ptr++;
     end = ptr + size;
+    if (end > buffer.data() + buffer.size())
+      throw std::runtime_error("Packet exceeds buffer size");
   }
   size_t getByte() {
     if (ptr == end) throw std::runtime_error("Exceeded packet size");
