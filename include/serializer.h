@@ -24,7 +24,7 @@ struct Deserializer {
   static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
     int64_t len = 0;
     while (offs < vec.size()) {
-      len = (len << 7) + (vec[offs] & 0x7F);
+      len = (len << 7) | (vec[offs] & 0x7F);
       if ((vec[offs] & 0x80) == 0)
         return len;
       offs++;
