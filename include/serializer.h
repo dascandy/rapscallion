@@ -80,6 +80,8 @@ DECLARE_READER_WRITER(int)
 DECLARE_READER_WRITER(long)
 DECLARE_READER_WRITER(std::string)
 DECLARE_READER_WRITER(bool)
+DECLARE_READER_WRITER(double)
+DECLARE_READER_WRITER(float)
 
 template <typename T>
 class optional;
