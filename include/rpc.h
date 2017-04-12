@@ -15,6 +15,9 @@ struct client {
   client(const std::string& server, uint16_t port)
   : c(server, port)
   {
+    Serializer s;
+    s.write((uint32_t)RAPSCALLION_VERSION);
+    c.send(s);
   }
   template <typename RV, typename... Args>
   rpc::handle<RV> Invoke(size_t functionId, Args... args) {
