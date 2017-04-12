@@ -27,10 +27,11 @@ void writer<bool>::write(Serializer& s, const bool &b) {
 size_t reader<size_t>::read(Deserializer& s) {
   size_t val = 0;
   size_t offs = 0;
-  uint8_t b = s.getByte();
+  size_t b = s.getByte();
   while (b & 0x80) {
     val |= (b & 0x7F) << offs;
     offs += 7;
+    b = s.getByte();
   }
   val |= b << offs;
   return val;
