@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(RaPsCallion CXX)
+enable_testing()
 
 enable_language(C) # Older CMake versions need this while detecting Boost
 find_package(Boost 1.38 REQUIRED)
@@ -30,3 +31,5 @@ target_link_libraries(RaPsCallion
   PRIVATE
     Threads::Threads
 )
+
+add_subdirectory(test)
