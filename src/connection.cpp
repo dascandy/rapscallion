@@ -18,6 +18,11 @@
 #define MSG_MORE 0
 #endif
 
+static struct {
+  uint32_t magic = 0xACA1110;
+  uint32_t version = 1;
+} header;
+
 bool writesocket(int fd, const void *buf, size_t bytes) {
   const char *sb = (const char *)buf;
   do {
@@ -36,6 +41,7 @@ Connection::Connection(int fd)
 : fd(fd)
 {
   pipe(p);
+  writesocket(fd, header, sizeof(header));
 }
 
 Connection::Connection(const std::string& server, const std::string& port)
@@ -84,7 +90,7 @@ void Connection::send(Serializer& s) {
 
 void Connection::receive() {
   uint8_t buffer[1024];
-
+  bool gotHeader = false;
   fd_set fds;
   try {
     while (true) {
@@ -104,10 +110,22 @@ void Connection::receive() {
 
       receiveBuffer.insert(receiveBuffer.end(), buffer, buffer+bytesRead);
       size_t offset = 0;
-      while (Deserializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
-        Deserializer s(receiveBuffer, offset);
-        offset += Deserializer::PacketSize(receiveBuffer, offset);
-        cb->onPacket(s);
+      if (!gotHeader) {
+        if (receiveBuffer.size() >= 8) {
+          if (memcmp(receiveBuffer.data(), header, sizeof(header)) != 0) {
+            // Incompatible client, disconnect
+            return;
+          }
+          offset = 8;
+        }
+      }
+
+      if (gotHeader) {
+        while (Deserializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
+          Deserializer s(receiveBuffer, offset);
+          offset += Deserializer::PacketSize(receiveBuffer, offset);
+          cb->onPacket(s);
+        }
       }
     }
   } catch (...) {}
