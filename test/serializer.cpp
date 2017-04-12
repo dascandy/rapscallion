@@ -5,7 +5,7 @@
 
 void test(const double in) {
   Serializer s;
-  writer<double>::write(s, in);
+  writer<decltype(+in)>::write(s, in);
   const auto buf = s.data();
   Deserializer d(s.buffer, s.buffer.size() - buf.second);
   const auto out = reader<decltype(+in)>::read(d);
