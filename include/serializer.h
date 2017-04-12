@@ -16,6 +16,8 @@ struct Deserializer {
     while (*ptr & 0x80) ptr++;
     ptr++;
     end = ptr + size;
+    if (end > buffer.data() + buffer.size())
+      throw std::runtime_error("Packet exceeds buffer size");
   }
   size_t getByte() {
     if (ptr == end) throw std::runtime_error("Exceeded packet size");
@@ -24,7 +26,7 @@ struct Deserializer {
   static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
     int64_t len = 0;
     while (offs < vec.size()) {
-      len = (len << 7) + (vec[offs] & 0x7F);
+      len = (len << 7) | (vec[offs] & 0x7F);
       if ((vec[offs] & 0x80) == 0)
         return len;
       offs++;
@@ -75,11 +77,13 @@ template <typename T>
 struct writer;
 template <typename T>
 struct reader;
-DECLARE_READER_WRITER(size_t)
+DECLARE_READER_WRITER(std::uint_least64_t)
 DECLARE_READER_WRITER(int)
 DECLARE_READER_WRITER(long)
 DECLARE_READER_WRITER(std::string)
 DECLARE_READER_WRITER(bool)
+DECLARE_READER_WRITER(double)
+DECLARE_READER_WRITER(float)
 
 template <typename T>
 class optional;
