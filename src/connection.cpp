@@ -18,10 +18,7 @@
 #define MSG_MORE 0
 #endif
 
-static struct {
-  uint32_t magic = 0xACA1110;
-  uint32_t version = 1;
-} header;
+static uint8_t header[8] = { 0x0A, 0xCA, 0x11, 0x10, 0x01, 0x00, 0x00, 0x00 };
 
 bool writesocket(int fd, const void *buf, size_t bytes) {
   const char *sb = (const char *)buf;
