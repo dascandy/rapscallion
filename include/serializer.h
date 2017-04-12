@@ -77,7 +77,7 @@ template <typename T>
 struct writer;
 template <typename T>
 struct reader;
-DECLARE_READER_WRITER(size_t)
+DECLARE_READER_WRITER(std::uint_least64_t)
 DECLARE_READER_WRITER(int)
 DECLARE_READER_WRITER(long)
 DECLARE_READER_WRITER(std::string)
