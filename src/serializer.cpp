@@ -33,7 +33,8 @@ namespace {
     std::int_least32_t exponent;
     // Can support double precision IEEE754 floats (quadruple requires 112 bits, octuple 236 bits)
     std::uint_least64_t fraction;
-    static constexpr unsigned fraction_bits = 64;
+    // One bit reserved for sign bit
+    static constexpr unsigned fraction_bits = 63 - 1;
     bool is_negative;
     //! Is either infinity or NaN
     bool is_non_number;
