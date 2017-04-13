@@ -18,20 +18,24 @@
 #define MSG_MORE 0
 #endif
 
-static uint8_t header[8] = { 0x0A, 0xCA, 0x11, 0x10, 0x01, 0x00, 0x00, 0x00 };
+namespace rapscallion {
 
-bool writesocket(int fd, const void *buf, size_t bytes) {
-  const char *sb = (const char *)buf;
-  do {
-    int written = send(fd, sb, (int)bytes, MSG_NOSIGNAL | 0);
-    if (written < 0) {
-      return false;
-    } else {
-      sb += written;
-      bytes -= written;
-    }
-  } while (bytes);
-  return true;
+namespace {
+  static uint8_t header[8] = { 0x0A, 0xCA, 0x11, 0x10, 0x01, 0x00, 0x00, 0x00 };
+
+  bool writesocket(int fd, const void *buf, size_t bytes) {
+    const char *sb = (const char *)buf;
+    do {
+      int written = send(fd, sb, (int)bytes, MSG_NOSIGNAL | 0);
+      if (written < 0) {
+        return false;
+      } else {
+        sb += written;
+        bytes -= written;
+      }
+    } while (bytes);
+    return true;
+  }
 }
 
 Connection::Connection(int fd)
@@ -82,7 +86,7 @@ void Connection::send(Serializer& s) {
   if (stopped) return;
   std::unique_lock<std::mutex> lock(m);
   const auto& buffer = s.data();
-  if (!::writesocket(fd, buffer.first, buffer.second))
+  if (!writesocket(fd, buffer.first, buffer.second))
     Stop();
 }
 
@@ -129,4 +133,4 @@ void Connection::receive() {
   } catch (...) {}
 }
 
-
+}

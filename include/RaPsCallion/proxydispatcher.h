@@ -12,6 +12,8 @@
 #include "future.h"
 #include "connection.h"
 
+namespace rapscallion {
+
 class remote_exception : public std::runtime_error {
 public:
   remote_exception(const std::string& value) 
@@ -309,7 +311,6 @@ protected:
                          static Name##Dispatch __inst(n); \
                        }
 
+}
 
 #endif
-
-

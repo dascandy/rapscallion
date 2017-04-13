@@ -8,6 +8,8 @@
 #include <atomic>
 #include <thread>
 
+namespace rapscallion {
+
 class Connection;
 
 class ServerConnection {
@@ -24,6 +26,6 @@ private:
   std::thread receiveThread;
 };
 
+}
+
 #endif
-
-

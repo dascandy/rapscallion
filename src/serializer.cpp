@@ -4,27 +4,28 @@
 #include <cstdlib>
 #include <limits>
 
-void writer<std::uint_least64_t>::write(Serializer& s, const std::uint_least64_t &val) {
-  auto value = val;
+namespace rapscallion {
+
+void serializer<std::uint_least64_t>::write(Serializer& s, std::uint_least64_t value) {
   while (value >= 0x80) {
     s.addByte((uint8_t)(value & 0x7F) | 0x80);
     value >>= 7;
   }
   s.addByte((uint8_t)value);
 }
-void writer<long>::write(Serializer& s, const long &v) {
+void serializer<long>::write(Serializer& s, const long v) {
   std::uint_least64_t val = (std::abs(v) << 1) | (v < 0 ? 1 : 0);
-  writer<std::uint_least64_t>::write(s, val);
+  serializer<std::uint_least64_t>::write(s, val);
 }
-void writer<int>::write(Serializer& s, const int &v) {
-  writer<long>::write(s, v);
+void serializer<int>::write(Serializer& s, const int v) {
+  serializer<long>::write(s, v);
 }
-void writer<std::string>::write(Serializer& s, const std::string& value) {
-  writer<std::uint_least64_t>::write(s, value.size());
+void serializer<std::string>::write(Serializer& s, const std::string& value) {
+  serializer<std::uint_least64_t>::write(s, value.size());
   for (auto& c : value) s.addByte(c);
 }
-void writer<bool>::write(Serializer& s, const bool &b) {
-  writer<std::uint_least64_t>::write(s, b ? 1 : 0);
+void serializer<bool>::write(Serializer& s, const bool b) {
+  serializer<std::uint_least64_t>::write(s, b ? 1 : 0);
 }
 
 namespace {
@@ -52,42 +53,39 @@ namespace {
 }
 
 template <>
-struct writer<float_repr> {
+struct serializer<float_repr> {
   static void write(Serializer& s, float_repr const &b) {
     // Using multiplication to avoid bit shifting a signed integer
     const decltype(b.exponent) exponent_and_special
       = b.exponent * 2 + b.is_non_number * 1;
     const decltype(b.fraction) reversed_fraction_and_sign
       = bitreverse(b.fraction) * 2 + b.is_negative * 1;
-    writer<decltype(+exponent_and_special)>::write(s, exponent_and_special);
-    writer<decltype(b.fraction)>::write(s, reversed_fraction_and_sign);
+    serializer<decltype(+exponent_and_special)>::write(s, exponent_and_special);
+    serializer<decltype(b.fraction)>::write(s, reversed_fraction_and_sign);
   }
-};
-template <>
-struct reader<float_repr> {
   static float_repr read(Deserializer& s) {
     float_repr result;
-    const auto exponent_and_special = reader<decltype(result.exponent)>::read(s);
+    const auto exponent_and_special = serializer<decltype(result.exponent)>::read(s);
     result.is_non_number = !!(exponent_and_special / 1 % 2);
     result.exponent      =    exponent_and_special / 2;
-    const auto reversed_fraction_and_sign = reader<decltype(result.fraction)>::read(s);
+    const auto reversed_fraction_and_sign = serializer<decltype(result.fraction)>::read(s);
     result.is_negative   = !!(reversed_fraction_and_sign / 1 % 2);
     result.fraction      = bitreverse(reversed_fraction_and_sign / 2);
     return result;
   }
 };
 
-void writer<double>::write(Serializer& s, double const &b) {
+void serializer<double>::write(Serializer& s, double const b) {
   switch (std::fpclassify(b)) {
     case FP_ZERO:
-      writer<float_repr>::write(s, { 0, 0, !!std::signbit(b), false });
+      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), false });
       break;
     case FP_INFINITE:
-      writer<float_repr>::write(s, { 0, 0, !!std::signbit(b), true });
+      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), true });
       break;
     case FP_NAN:
       // The bit reversal is to ensure the most efficient encoding can be used
-      writer<float_repr>::write(s, { 0, bitreverse(static_cast<decltype(float_repr::fraction)>(1)), false, true });
+      serializer<float_repr>::write(s, { 0, bitreverse(static_cast<decltype(float_repr::fraction)>(1)), false, true });
       break;
     case FP_NORMAL:
     case FP_SUBNORMAL:
@@ -96,12 +94,12 @@ void writer<double>::write(Serializer& s, double const &b) {
       repr.is_negative = !!std::signbit(b);
       // Make the fraction a positive integer
       repr.fraction = std::ldexp(std::abs(std::frexp(b, &repr.exponent)), repr.fraction_bits);
-      writer<decltype(repr)>::write(s, repr);
+      serializer<decltype(repr)>::write(s, repr);
       break;
   }
 }
-double reader<double>::read(Deserializer& s) {
-  const auto repr = reader<float_repr>::read(s);
+double serializer<double>::read(Deserializer& s) {
+  const auto repr = serializer<float_repr>::read(s);
   if (repr.is_non_number) {
     if (repr.fraction == 0) {
       return repr.is_negative ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
@@ -117,14 +115,14 @@ double reader<double>::read(Deserializer& s) {
   return (repr.is_negative ? -1.0 : 1.0) * std::ldexp(static_cast<double>(repr.fraction), repr.exponent - repr.fraction_bits);
 }
 
-void writer<float>::write(Serializer& s, float const &b) {
-  writer<double>::write(s, b);
+void serializer<float>::write(Serializer& s, float const b) {
+  serializer<double>::write(s, b);
 }
-float reader<float>::read(Deserializer& s) {
-  return reader<double>::read(s);
+float serializer<float>::read(Deserializer& s) {
+  return serializer<double>::read(s);
 }
 
-std::uint_least64_t reader<std::uint_least64_t>::read(Deserializer& s) {
+std::uint_least64_t serializer<std::uint_least64_t>::read(Deserializer& s) {
   std::uint_least64_t val = 0,
     offs = 0,
     b = s.getByte();
@@ -136,17 +134,17 @@ std::uint_least64_t reader<std::uint_least64_t>::read(Deserializer& s) {
   val |= b << offs;
   return val;
 }
-long reader<long>::read(Deserializer& s) {
-  const auto val = reader<std::uint_least64_t>::read(s);
+long serializer<long>::read(Deserializer& s) {
+  const auto val = serializer<std::uint_least64_t>::read(s);
   auto value = static_cast<long>(val >> 1);
   if (val & 1) value = -value;
   return value;
 }
-int reader<int>::read(Deserializer& s) {
-  return reader<long>::read(s);
+int serializer<int>::read(Deserializer& s) {
+  return serializer<long>::read(s);
 }
-std::string reader<std::string>::read(Deserializer& s) {
-  const auto length = reader<std::uint_least64_t>::read(s);
+std::string serializer<std::string>::read(Deserializer& s) {
+  const auto length = serializer<std::uint_least64_t>::read(s);
   const uint8_t* ptr = s.ptr;
   const uint8_t* end = ptr + length;
   if (end > s.end) 
@@ -154,8 +152,8 @@ std::string reader<std::string>::read(Deserializer& s) {
   s.ptr = end;
   return std::string(reinterpret_cast<const char*>(ptr), length);
 }
-bool reader<bool>::read(Deserializer& s) {
-  return reader<std::uint_least64_t>::read(s) > 0;
+bool serializer<bool>::read(Deserializer& s) {
+  return serializer<std::uint_least64_t>::read(s) > 0;
 }
 
-
+}

@@ -10,6 +10,8 @@
 #include <vector>
 #include <atomic>
 
+namespace rapscallion {
+
 struct Serializer;
 struct Deserializer;
 struct Callback {
@@ -36,6 +38,6 @@ private:
   Callback* cb;
 };
 
+}
+
 #endif
-
-
