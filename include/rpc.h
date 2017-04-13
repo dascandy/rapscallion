@@ -8,17 +8,23 @@ struct IResult {
 };
 
 struct server {
-  
+  server(uint16_t port)
+  : sc(port)
+  {
+    sc.onConnection([this](std::shared_ptr<Connection> conn) {
+      addConnection(conn);
+    });
+  }
+  void addConnection(std::shared_ptr<Connection> conn) {
+    // TODO: do something with this connection
+  }
+  ServerConnection sc;
 };
 
 struct client {
   client(const std::string& server, uint16_t port)
   : c(server, port)
-  {
-    Serializer s;
-    s.write((uint32_t)RAPSCALLION_VERSION);
-    c.send(s);
-  }
+  {}
   template <typename RV, typename... Args>
   rpc::handle<RV> Invoke(size_t functionId, Args... args) {
     size_t myId = maxId++;
