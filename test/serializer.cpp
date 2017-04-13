@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
-#include <serializer.h>
+#include <RaPsCallion/serializer.h>
 
 namespace rapscallion {
 namespace test {

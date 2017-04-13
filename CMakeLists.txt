@@ -23,11 +23,11 @@ if(CMAKE_VERSION VERSION_LESS "3.5" AND NOT TARGET Boost::boost)
 endif()
 
 add_library(RaPsCallion SHARED
-  include/connection.h
-  include/future.h
-  include/rpc.h
-  include/serializer.h
-  include/serverconnection.h
+  include/RaPsCallion/connection.h
+  include/RaPsCallion/future.h
+  include/RaPsCallion/rpc.h
+  include/RaPsCallion/serializer.h
+  include/RaPsCallion/serverconnection.h
   src/connection.cpp
   src/serializer.cpp
   src/serverconnection.cpp
@@ -36,6 +36,8 @@ set_target_properties(RaPsCallion PROPERTIES OUTPUT_NAME rapscallion)
 target_include_directories(RaPsCallion
   PUBLIC
     include
+  PRIVATE
+    include/RaPsCallion
 )
 target_link_libraries(RaPsCallion
   PRIVATE
