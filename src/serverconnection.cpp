@@ -12,6 +12,8 @@
 #include <netinet/in.h>
 #endif
 
+namespace rapscallion {
+
 ServerConnection::ServerConnection(std::string port)
 {
   pipe(p);
@@ -64,4 +66,4 @@ void ServerConnection::run() {
   }
 }
 
-
+}

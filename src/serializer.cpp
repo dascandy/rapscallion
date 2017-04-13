@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <limits>
 
+namespace rapscallion {
+
 void writer<std::uint_least64_t>::write(Serializer& s, const std::uint_least64_t &val) {
   auto value = val;
   while (value >= 0x80) {
@@ -158,4 +160,4 @@ bool reader<bool>::read(Deserializer& s) {
   return reader<std::uint_least64_t>::read(s) > 0;
 }
 
-
+}

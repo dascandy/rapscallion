@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+namespace rapscallion {
+
 struct Deserializer {
   Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
   : ptr(buffer.data() + offset)
@@ -151,6 +153,6 @@ struct reader<std::shared_ptr<T>> {
   }
 };
 
+}
+
 #endif
-
-

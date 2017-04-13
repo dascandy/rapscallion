@@ -3,6 +3,9 @@
 #include <limits>
 #include <serializer.h>
 
+namespace rapscallion {
+namespace test {
+
 void test(const double in, const std::ptrdiff_t expected_size = -1) {
   Serializer s;
   writer<decltype(+in)>::write(s, in);
@@ -22,7 +25,12 @@ void test(const double in, const std::ptrdiff_t expected_size = -1) {
   assert(in == out || (std::isnan(in) && std::isnan(out)));
 }
 
+}
+}
+
 int main() {
+  using namespace rapscallion::test;
+
   // Smallest encodings, only requiring flags
   test(std::numeric_limits<double>::infinity(), 2);
   test(-std::numeric_limits<double>::infinity(), 2);

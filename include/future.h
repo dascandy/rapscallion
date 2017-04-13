@@ -6,6 +6,8 @@
 #include <memory>
 #include "serializer.h"
 
+namespace rapscallion {
+
 // TODO: add an actual implementation of this thing
 template <typename... E>
 struct remote_exception_ptr;
@@ -98,6 +100,6 @@ private:
   std::shared_ptr<result<T>> state;
 };
 
+}
+
 #endif
-
-
