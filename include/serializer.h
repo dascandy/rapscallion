@@ -10,34 +10,6 @@
 
 namespace rapscallion {
 
-struct Deserializer {
-  Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
-  : ptr(buffer.data() + offset)
-  {
-    uint64_t size = PacketSize(buffer, offset);
-    while (*ptr & 0x80) ptr++;
-    ptr++;
-    end = ptr + size;
-    if (end > buffer.data() + buffer.size())
-      throw std::runtime_error("Packet exceeds buffer size");
-  }
-  size_t getByte() {
-    if (ptr == end) throw std::runtime_error("Exceeded packet size");
-    return *ptr++;
-  }
-  static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
-    int64_t len = 0;
-    while (offs < vec.size()) {
-      len = (len << 7) | (vec[offs] & 0x7F);
-      if ((vec[offs] & 0x80) == 0)
-        return len;
-      offs++;
-    }
-    return -1;
-  }
-  const uint8_t *ptr, *end;
-};
-
 struct Serializer {
   Serializer() {
     buffer.resize(8);
@@ -56,6 +28,42 @@ struct Serializer {
     buffer[offs] = len | mask;
     return std::make_pair(buffer.data() + offs, buffer.size() - offs);
   }
+};
+
+struct Deserializer {
+  Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
+  : ptr(buffer.data() + offset)
+  {
+    uint64_t size = PacketSize(buffer, offset);
+    while (*ptr & 0x80) ptr++;
+    ptr++;
+    end = ptr + size;
+    if (end > buffer.data() + buffer.size())
+      throw std::runtime_error("Packet exceeds buffer size");
+  }
+
+  Deserializer(const Serializer& s)
+    : ptr(&*s.buffer.begin() + 8)
+    , end(&*s.buffer.end())
+  {
+    s.buffer.at(7);
+  }
+
+  size_t getByte() {
+    if (ptr == end) throw std::runtime_error("Exceeded packet size");
+    return *ptr++;
+  }
+  static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
+    int64_t len = 0;
+    while (offs < vec.size()) {
+      len = (len << 7) | (vec[offs] & 0x7F);
+      if ((vec[offs] & 0x80) == 0)
+        return len;
+      offs++;
+    }
+    return -1;
+  }
+  const uint8_t *ptr, *end;
 };
 
 struct parse_exception : public std::exception {

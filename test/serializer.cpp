@@ -9,7 +9,7 @@ namespace test {
 void test(const double in, const std::ptrdiff_t expected_size = -1) {
   Serializer s;
   serializer<decltype(+in)>::write(s, in);
-  Deserializer d(s.buffer, s.buffer.size() - s.data().second);
+  Deserializer d(s);
 
   const auto size = d.end - d.ptr;
   if (expected_size >= 0)
