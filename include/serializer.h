@@ -67,18 +67,13 @@ struct parse_exception : public std::exception {
 
 #define DECLARE_READER_WRITER(type) \
 template <> \
-struct reader<type> { \
+struct serializer<type> { \
   static type read(Deserializer& s); \
-}; \
-template <> \
-struct writer<type> { \
   static void write(Serializer& s, type const &b); \
 };
 
 template <typename T>
-struct writer;
-template <typename T>
-struct reader;
+struct serializer;
 DECLARE_READER_WRITER(std::uint_least64_t)
 DECLARE_READER_WRITER(int)
 DECLARE_READER_WRITER(long)
@@ -90,63 +85,54 @@ DECLARE_READER_WRITER(float)
 template <typename T>
 class optional;
 template <typename T>
-struct writer<optional<T> > {
+struct serializer<optional<T> > {
   static void write(Serializer &s, const optional<T> &opt) {
-    writer<bool>::write(s, (opt.value != NULL));
+    serializer<bool>::write(s, (opt.value != NULL));
     if (opt.value) {
-      writer<T>::write(s, *opt.value);
+      serializer<T>::write(s, *opt.value);
     }
   }
-};
-template <typename T>
-struct reader<optional<T> > {
   static optional<T> read(Deserializer& s) {
     optional<T> val;
-    bool isNotNull = reader<bool>::read(s);
+    bool isNotNull = serializer<bool>::read(s);
     if (isNotNull) {
-      val.set(reader<T>::read(s));
+      val.set(serializer<T>::read(s));
     }
     return val;
   }
 };
 
 template <typename T>
-struct writer<std::vector<T> > {
+struct serializer<std::vector<T> > {
   static void write(Serializer& s, const std::vector<T>& value) {
-    writer<std::uint_least64_t>::write(s, value.size());
+    serializer<std::uint_least64_t>::write(s, value.size());
     for (const T &v : value) {
-      writer<T>::write(s, v);
+      serializer<T>::write(s, v);
     }
   }
-};
-template <typename T>
-struct reader<std::vector<T> > {
   static std::vector<T> read(Deserializer& s) {
     std::vector<T> t;
-    const auto size = reader<std::uint_least64_t>::read(s);
+    const auto size = serializer<std::uint_least64_t>::read(s);
     t.reserve(size);
     for (decltype(+size) n = 0; n < size; ++n) {
-      t.push_back(reader<T>::read(s));
+      t.push_back(serializer<T>::read(s));
     }
     return t;
   }
 };
 
 template <typename T>
-struct writer<std::shared_ptr<T>> {
+struct serializer<std::shared_ptr<T>> {
   static void write(Serializer& s, const std::shared_ptr<T> &p) {
-    writer<bool>::write(s, (p.get() != NULL));
+    serializer<bool>::write(s, (p.get() != NULL));
     if (p.get()) {
-      writer<T>::write(s, *p.get());
+      serializer<T>::write(s, *p.get());
     }
   }
-};
-template <typename T>
-struct reader<std::shared_ptr<T>> {
   static std::shared_ptr<T> read(Deserializer& s) {
-    bool isNotNull = reader<bool>::read(s);
+    bool isNotNull = serializer<bool>::read(s);
     if (isNotNull) {
-      return std::make_shared<T>(reader<T>::read(s));
+      return std::make_shared<T>(serializer<T>::read(s));
     } else {
       return std::shared_ptr<T>();
     }

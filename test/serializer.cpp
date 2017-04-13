@@ -8,7 +8,7 @@ namespace test {
 
 void test(const double in, const std::ptrdiff_t expected_size = -1) {
   Serializer s;
-  writer<decltype(+in)>::write(s, in);
+  serializer<decltype(+in)>::write(s, in);
   Deserializer d(s.buffer, s.buffer.size() - s.data().second);
 
   const auto size = d.end - d.ptr;
@@ -21,7 +21,7 @@ void test(const double in, const std::ptrdiff_t expected_size = -1) {
   // + = 10 byte
   assert(size <= 10);
 
-  const auto out = reader<decltype(+in)>::read(d);
+  const auto out = serializer<decltype(+in)>::read(d);
   assert(in == out || (std::isnan(in) && std::isnan(out)));
 }
 

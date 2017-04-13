@@ -21,7 +21,7 @@ struct handle_promise {
   typedef std::promise<T> promise_type;
 
   void operator()(promise_type& value, Deserializer& s) const {
-      value.set_value(reader<T>::read(s));
+      value.set_value(serializer<T>::read(s));
   }
 };
 
@@ -37,7 +37,7 @@ template <typename T, typename... E>
 struct handle_promise<expected<T, remote_exception_ptr<E...>>> {
   typedef std::promise<T> promise_type;
   void operator()(promise_type& value, Deserializer& s) const {
-    auto e = reader<expected<T, remote_exception_ptr<E...>>>::read(s);
+    auto e = serializer<expected<T, remote_exception_ptr<E...>>>::read(s);
     if (e)
       value.set_value(*e);
     else
@@ -49,7 +49,7 @@ template <typename... E>
 struct handle_promise<expected<void, remote_exception_ptr<E...>>> {
   typedef std::promise<void> promise_type;
   void operator()(promise_type& value, Deserializer& s) const {
-    auto e = reader<expected<void, remote_exception_ptr<E...>>>::read(s);
+    auto e = serializer<expected<void, remote_exception_ptr<E...>>>::read(s);
     if (e)
       value.set_value();
     else
