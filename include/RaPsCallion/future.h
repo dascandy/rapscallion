@@ -92,6 +92,9 @@ private:
 template <typename T>
 class future {
 public:
+  future(const T&);
+  future(T&&);
+
   std::future<T> get_local() {
     return state->get_local();
   }

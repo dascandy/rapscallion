@@ -1,6 +1,7 @@
 project(RaPsCallion.Test CXX)
 
 foreach(TEST
+    call
     serializer
 )
   add_executable(${PROJECT_NAME}.${TEST}
