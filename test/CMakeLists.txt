@@ -2,6 +2,7 @@ project(RaPsCallion.Test CXX)
 
 foreach(TEST
     serializer
+    simple-call
 )
   add_executable(${PROJECT_NAME}.${TEST}
     ${TEST}.cpp
