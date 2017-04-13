@@ -77,7 +77,7 @@ struct parse_exception : public std::exception {
 template <> \
 struct serializer<type> { \
   static type read(Deserializer& s); \
-  static void write(Serializer& s, type const &b); \
+  static void write(Serializer& s, type b); \
 };
 
 template <typename T>
@@ -85,10 +85,14 @@ struct serializer;
 DECLARE_READER_WRITER(std::uint_least64_t)
 DECLARE_READER_WRITER(int)
 DECLARE_READER_WRITER(long)
-DECLARE_READER_WRITER(std::string)
 DECLARE_READER_WRITER(bool)
 DECLARE_READER_WRITER(double)
 DECLARE_READER_WRITER(float)
+template <>
+struct serializer<std::string> {
+  static std::string read(Deserializer& s);
+  static void write(Serializer& s, const std::string& b);
+};
 
 template <typename T>
 class optional;

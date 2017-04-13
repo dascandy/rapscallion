@@ -6,26 +6,25 @@
 
 namespace rapscallion {
 
-void serializer<std::uint_least64_t>::write(Serializer& s, const std::uint_least64_t &val) {
-  auto value = val;
+void serializer<std::uint_least64_t>::write(Serializer& s, std::uint_least64_t value) {
   while (value >= 0x80) {
     s.addByte((uint8_t)(value & 0x7F) | 0x80);
     value >>= 7;
   }
   s.addByte((uint8_t)value);
 }
-void serializer<long>::write(Serializer& s, const long &v) {
+void serializer<long>::write(Serializer& s, const long v) {
   std::uint_least64_t val = (std::abs(v) << 1) | (v < 0 ? 1 : 0);
   serializer<std::uint_least64_t>::write(s, val);
 }
-void serializer<int>::write(Serializer& s, const int &v) {
+void serializer<int>::write(Serializer& s, const int v) {
   serializer<long>::write(s, v);
 }
 void serializer<std::string>::write(Serializer& s, const std::string& value) {
   serializer<std::uint_least64_t>::write(s, value.size());
   for (auto& c : value) s.addByte(c);
 }
-void serializer<bool>::write(Serializer& s, const bool &b) {
+void serializer<bool>::write(Serializer& s, const bool b) {
   serializer<std::uint_least64_t>::write(s, b ? 1 : 0);
 }
 
@@ -76,7 +75,7 @@ struct serializer<float_repr> {
   }
 };
 
-void serializer<double>::write(Serializer& s, double const &b) {
+void serializer<double>::write(Serializer& s, double const b) {
   switch (std::fpclassify(b)) {
     case FP_ZERO:
       serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), false });
@@ -116,7 +115,7 @@ double serializer<double>::read(Deserializer& s) {
   return (repr.is_negative ? -1.0 : 1.0) * std::ldexp(static_cast<double>(repr.fraction), repr.exponent - repr.fraction_bits);
 }
 
-void serializer<float>::write(Serializer& s, float const &b) {
+void serializer<float>::write(Serializer& s, float const b) {
   serializer<double>::write(s, b);
 }
 float serializer<float>::read(Deserializer& s) {
