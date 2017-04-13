@@ -90,13 +90,13 @@ private:
 };
 
 template <typename T>
-class handle {
+class future {
 public:
   std::future<T> get_local() {
     return state->get_local();
   }
 private:
-  handle(std::shared_ptr<result<T>> state) : state(std::move(state)) {}
+  future(std::shared_ptr<result<T>> state) : state(std::move(state)) {}
   std::shared_ptr<result<T>> state;
 };
 

@@ -20,14 +20,14 @@ struct client {
     c.send(s);
   }
   template <typename RV, typename... Args>
-  handle<RV> Invoke(size_t functionId, Args... args) {
+  future<RV> Invoke(size_t functionId, Args... args) {
     size_t myId = maxId++;
     Serializer s;
     s.write(myId, functionId, args...);
     c.send(s);
     std::shared_ptr<result<RV>> result = std::make_shared<result<RV>>(this, myId);
     results[myId] = result;
-    return handle<RV>(result);
+    return future<RV>(result);
   }
   void request_value(size_t requestId) {
     auto it = results.find(requestId);
