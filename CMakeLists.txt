@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.1)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(RaPsCallion CXX)
 enable_testing()
+
+include(3rdparty)
 
 if(CMAKE_VERSION VERSION_LESS "3.4")
   # Older CMake versions need this while detecting Threads (for header detection)
