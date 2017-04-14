@@ -27,6 +27,7 @@ add_library(RaPsCallion SHARED
   include/RaPsCallion/future.h
   include/RaPsCallion/rpc.h
   include/RaPsCallion/serializer.h
+  include/RaPsCallion/serializer_fwd.hpp
   include/RaPsCallion/serverconnection.h
   src/connection.cpp
   src/serializer.cpp
