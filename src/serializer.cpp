@@ -29,6 +29,12 @@ void serializer<bool>::write(Serializer& s, const bool b) {
 }
 
 namespace {
+  enum Type {
+    Zero,
+    Infinity,
+    NaN,
+    Normal
+  };
   struct float_repr {
     // Can fit an exponent of 32-2=20 bits, can support octuple-precision IEEE754 floats
     std::int_least32_t exponent;
@@ -37,8 +43,7 @@ namespace {
     // One bit reserved for sign bit
     static constexpr unsigned fraction_bits = 63 - 1;
     bool is_negative;
-    //! Is either infinity or NaN
-    bool is_non_number;
+    Type type;
   };
   auto bitreverse(std::uint_least64_t b) -> decltype(b)
   {
@@ -56,41 +61,58 @@ template <>
 struct serializer<float_repr> {
   static void write(Serializer& s, float_repr const &b) {
     // Using multiplication to avoid bit shifting a signed integer
-    const decltype(b.exponent) exponent_and_special
-      = b.exponent * 2 + b.is_non_number * 1;
-    const decltype(b.fraction) reversed_fraction_and_sign
-      = bitreverse(b.fraction) * 2 + b.is_negative * 1;
-    serializer<decltype(+exponent_and_special)>::write(s, exponent_and_special);
-    serializer<decltype(b.fraction)>::write(s, reversed_fraction_and_sign);
+    switch(b.type) {
+      default:
+        {
+          serializer<decltype(+b.exponent)>::write(s, b.is_negative ? -b.type : b.type);
+        }
+        break;
+      case Normal:
+        {
+          const decltype(b.exponent) exponent
+            = b.exponent * 2 + (b.exponent < 0 ? -b.is_negative : b.is_negative);
+          const decltype(b.fraction) reversed_fraction
+            = bitreverse(b.fraction);
+          serializer<decltype(+exponent)>::write(s, exponent < 0 ? exponent - 2 : exponent + 3);
+          serializer<decltype(+b.fraction)>::write(s, reversed_fraction);
+        }
+        break;
+    };
   }
   static float_repr read(Deserializer& s) {
     float_repr result;
-    const auto exponent_and_special = serializer<decltype(result.exponent)>::read(s);
-    result.is_non_number = !!(exponent_and_special / 1 % 2);
-    result.exponent      =    exponent_and_special / 2;
-    const auto reversed_fraction_and_sign = serializer<decltype(result.fraction)>::read(s);
-    result.is_negative   = !!(reversed_fraction_and_sign / 1 % 2);
-    result.fraction      = bitreverse(reversed_fraction_and_sign / 2);
-    return result;
+    auto exponent = serializer<decltype(result.exponent)>::read(s);
+    if (exponent < 3 && exponent >= -2) {
+      result.is_negative   = (exponent < 0);
+      result.type          = (Type)std::abs(exponent);
+    } else {
+      exponent = (exponent < 0) ? exponent + 2 : exponent - 3;
+      result.is_negative   = !!((exponent/ 1) % 2);
+      result.type = Normal;
+      result.exponent      = exponent / 2;
+      const auto reversed_fraction = serializer<decltype(result.fraction)>::read(s);
+      result.fraction      = bitreverse(reversed_fraction);
+      return result;
+    }
   }
 };
 
 void serializer<double>::write(Serializer& s, double const b) {
   switch (std::fpclassify(b)) {
     case FP_ZERO:
-      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), false });
+      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), Zero });
       break;
     case FP_INFINITE:
-      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), true });
+      serializer<float_repr>::write(s, { 0, 0, !!std::signbit(b), Infinity });
       break;
     case FP_NAN:
       // The bit reversal is to ensure the most efficient encoding can be used
-      serializer<float_repr>::write(s, { 0, bitreverse(static_cast<decltype(float_repr::fraction)>(1)), false, true });
+      serializer<float_repr>::write(s, { 0, 0, false, NaN });
       break;
     case FP_NORMAL:
     case FP_SUBNORMAL:
       float_repr repr;
-      repr.is_non_number = false;
+      repr.type = Normal;
       repr.is_negative = !!std::signbit(b);
       // Make the fraction a positive integer
       repr.fraction = std::ldexp(std::abs(std::frexp(b, &repr.exponent)), repr.fraction_bits);
@@ -98,21 +120,19 @@ void serializer<double>::write(Serializer& s, double const b) {
       break;
   }
 }
+
 double serializer<double>::read(Deserializer& s) {
   const auto repr = serializer<float_repr>::read(s);
-  if (repr.is_non_number) {
-    if (repr.fraction == 0) {
+  switch(repr.type) {
+    case Zero:
+      return (repr.is_negative ? -0.0 : 0.0);
+    case Infinity:
       return repr.is_negative ? -std::numeric_limits<double>::infinity() : std::numeric_limits<double>::infinity();
-    } else {
+    case NaN:
       return std::numeric_limits<double>::quiet_NaN();
-    }
+    default:
+      return (repr.is_negative ? -1.0 : 1.0) * std::ldexp(static_cast<double>(repr.fraction), repr.exponent - repr.fraction_bits);
   }
-
-  if (repr.exponent == 0 && repr.fraction == 0) {
-    return repr.is_negative ? -0.0 : 0.0;
-  }
-
-  return (repr.is_negative ? -1.0 : 1.0) * std::ldexp(static_cast<double>(repr.fraction), repr.exponent - repr.fraction_bits);
 }
 
 void serializer<float>::write(Serializer& s, float const b) {

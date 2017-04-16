@@ -20,7 +20,7 @@ find_package(Boost 1.38 REQUIRED)
 find_package(Threads REQUIRED)
 
 # The Boost::<C> IMPORT targets aren't added until CMake 3.5
-if(CMAKE_VERSION VERSION_LESS "3.5" AND NOT TARGET Boost::boost)
+if(NOT TARGET Boost::boost)
   add_library(Boost::boost INTERFACE IMPORTED)
   set_target_properties(Boost::boost PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")

@@ -35,22 +35,30 @@ TEST_CASE("Floats are serialized properly", "[serialization]") {
   using namespace rapscallion::test;
 
   // Smallest encodings, only requiring flags
-  test(std::numeric_limits<double>::infinity(), 2);
-  test(-std::numeric_limits<double>::infinity(), 2);
-  test(std::numeric_limits<double>::quiet_NaN(), 2);
-  test(0.0, 2);
-  test(-0.0, 2);
+  test(std::numeric_limits<double>::infinity(), 1);
+  test(-std::numeric_limits<double>::infinity(), 1);
+  test(std::numeric_limits<double>::quiet_NaN(), 1);
+  test(0.0, 1);
+  test(-0.0, 1);
 
-  test(0.25);
-  test(-0.25);
-  test(0.5);
-  test(-0.5);
-  test(1.0);
-  test(-1.0);
-  test(2.0);
-  test(-2.0);
-  test(M_PI);
-  test(-M_PI);
+  test(0.03125, 2);
+  test(-0.03125, 2);
+  test(0.0625, 2);
+  test(-0.0625, 2);
+  test(0.125, 2);
+  test(-0.125, 2);
+  test(0.25, 2);
+  test(-0.25, 2);
+  test(0.5, 2);
+  test(-0.5, 2);
+  test(1.0, 2);
+  test(-1.0, 2);
+  test(2.0, 2);
+  test(-2.0, 2);
+  test(M_PI, 9);
+  test(-M_PI, 9);
+  test((float)M_PI, 5);
+  test(-(float)M_PI, 5);
   test(std::numeric_limits<double>::epsilon());
   test(std::numeric_limits<double>::min());
   test(std::numeric_limits<double>::max());
