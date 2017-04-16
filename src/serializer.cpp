@@ -92,8 +92,8 @@ struct serializer<float_repr> {
       result.exponent      = exponent / 2;
       const auto reversed_fraction = serializer<decltype(result.fraction)>::read(s);
       result.fraction      = bitreverse(reversed_fraction);
-      return result;
     }
+    return result;
   }
 };
 
