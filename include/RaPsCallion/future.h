@@ -4,58 +4,26 @@
 #include <boost/optional.hpp>
 #include <future>
 #include <memory>
+#include <utility>
 #include "serializer.h"
 
 namespace rapscallion {
 
-// TODO: add an actual implementation of this thing
-template <typename... E>
-struct remote_exception_ptr;
+namespace detail {
+  template <typename T>
+  struct handle_promise {
+    void operator()(std::promise<T>& value, Deserializer& s) const {
+        value.set_value(serializer<T>::read(s));
+    }
+  };
 
-// TODO: add an actual implementation of this thing
-template <typename T, typename E>
-struct expected;
-
-template <typename T>
-struct handle_promise {
-  typedef std::promise<T> promise_type;
-
-  void operator()(promise_type& value, Deserializer& s) const {
-      value.set_value(serializer<T>::read(s));
-  }
-};
-
-template <>
-struct handle_promise<void> {
-  typedef std::promise<void> promise_type;
-  void operator()(promise_type& value, Deserializer& ) const {
-    value.set_value();
-  }
-};
-
-template <typename T, typename... E>
-struct handle_promise<expected<T, remote_exception_ptr<E...>>> {
-  typedef std::promise<T> promise_type;
-  void operator()(promise_type& value, Deserializer& s) const {
-    auto e = serializer<expected<T, remote_exception_ptr<E...>>>::read(s);
-    if (e)
-      value.set_value(*e);
-    else
-      value.set_error(e.error().make_exception_ptr());
-  }
-};
-
-template <typename... E>
-struct handle_promise<expected<void, remote_exception_ptr<E...>>> {
-  typedef std::promise<void> promise_type;
-  void operator()(promise_type& value, Deserializer& s) const {
-    auto e = serializer<expected<void, remote_exception_ptr<E...>>>::read(s);
-    if (e)
+  template <>
+  struct handle_promise<void> {
+    void operator()(std::promise<void>& value, Deserializer& ) const {
       value.set_value();
-    else
-      value.set_exception(e.error().make_exception_ptr());
-  }
-};
+    }
+  };
+}
 
 struct result_base
 {
@@ -72,7 +40,7 @@ public:
 
   std::future<T> get_local() {
     if (!promise) {
-      promise = promise_type();
+      promise = std::promise<T>();
       // TODO: signal to the remote that we actually wish to receive the value associated with this.
     }
 
@@ -85,8 +53,7 @@ public:
   }
 
 private:
-  typedef typename handle_promise<T>::promise_type promise_type;
-  boost::optional<promise_type> promise;
+  boost::optional<std::promise<T>> promise;
 };
 
 template <typename T>

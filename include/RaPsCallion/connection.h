@@ -9,11 +9,10 @@
 #include <condition_variable>
 #include <vector>
 #include <atomic>
+#include "serializer_fwd.hpp"
 
 namespace rapscallion {
 
-struct Serializer;
-struct Deserializer;
 struct Callback {
   virtual void onPacket(Deserializer& d) = 0;
 };

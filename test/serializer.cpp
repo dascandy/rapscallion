@@ -1,4 +1,4 @@
-#include <cassert>
+#include <catch/catch.hpp>
 #include <cmath>
 #include <limits>
 #include <RaPsCallion/serializer.h>
@@ -13,22 +13,25 @@ void test(const double in, const std::ptrdiff_t expected_size = -1) {
 
   const auto size = d.end - d.ptr;
   if (expected_size >= 0)
-    assert(size == expected_size);
+    CHECK(size == expected_size);
 
   // largest encoding of IEEE754 binary64 float:
   //  (11 exponent bits + exponent sign + NaN/inf flag) = 13 bits / 7 bit/byte = 2 byte
   //  (52 bit fraction + sign) = 53 bits / 7 bit/byte = 8 byte
   // + = 10 byte
-  assert(size <= 10);
+  CHECK(size <= 10);
 
   const auto out = serializer<decltype(+in)>::read(d);
-  assert(in == out || (std::isnan(in) && std::isnan(out)));
+  if (std::isnan(in))
+    CHECK(std::isnan(out));
+  else
+    CHECK(out == in);
 }
 
 }
 }
 
-int main() {
+TEST_CASE("Floats are serialized properly", "[serialization]") {
   using namespace rapscallion::test;
 
   // Smallest encodings, only requiring flags

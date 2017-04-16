@@ -7,9 +7,11 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "serializer_fwd.hpp"
 
 namespace rapscallion {
 
+namespace Serializer_ADL {
 struct Serializer {
   Serializer() {
     buffer.resize(8);
@@ -29,7 +31,9 @@ struct Serializer {
     return std::make_pair(buffer.data() + offs, buffer.size() - offs);
   }
 };
+}
 
+namespace Deserializer_ADL {
 struct Deserializer {
   Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
   : ptr(buffer.data() + offset)
@@ -65,6 +69,7 @@ struct Deserializer {
   }
   const uint8_t *ptr, *end;
 };
+}
 
 struct parse_exception : public std::exception {
   parse_exception(const char *err) : err(err)

@@ -1,15 +1,12 @@
 project(RaPsCallion.Test CXX)
 
-foreach(TEST
-    serializer
+add_executable(${PROJECT_NAME}
+  catch-main.cpp
+  serializer.cpp
 )
-  add_executable(${PROJECT_NAME}.${TEST}
-    ${TEST}.cpp
-  )
-  set_target_properties(${PROJECT_NAME}.${TEST} PROPERTIES OUTPUT_NAME ${TEST})
-  target_link_libraries(${PROJECT_NAME}.${TEST}
-    PRIVATE
-      RaPsCallion
-  )
-  add_test(NAME ${TEST} COMMAND ${PROJECT_NAME}.${TEST})
-endforeach()
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    Catch::Catch
+    RaPsCallion
+)
+add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
