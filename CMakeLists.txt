@@ -18,6 +18,9 @@ endif()
 
 find_package(Boost 1.38 REQUIRED)
 find_package(Threads REQUIRED)
+if (NOT WIN32)
+  add_definitions(-Wall -Wextra -Wpedantic)
+endif()
 
 # The Boost::<C> IMPORT targets aren't added until CMake 3.5
 if(NOT TARGET Boost::boost)
