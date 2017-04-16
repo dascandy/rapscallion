@@ -123,7 +123,7 @@ void Connection::receive() {
       }
 
       if (gotHeader) {
-        while (Deserializer::PacketSize(receiveBuffer, offset) >= receiveBuffer.size() - offset) {
+        while (Deserializer::PacketSize(receiveBuffer, offset) >= (int64_t)(receiveBuffer.size() - offset)) {
           Deserializer s(receiveBuffer, offset);
           offset += Deserializer::PacketSize(receiveBuffer, offset);
           cb->onPacket(s);
