@@ -125,10 +125,10 @@ SCENARIO("Serializing floating point numbers", "[serialization]") {
   TEST(-M_PI, 9);
   TEST((float)M_PI, 5);
   TEST(-(float)M_PI, 5);
-  TEST(std::numeric_limits<double>::epsilon());
-  TEST(std::numeric_limits<double>::min());
+  TEST(std::numeric_limits<double>::epsilon(), 3);
+  TEST(std::numeric_limits<double>::min(), 3);
   TEST(std::numeric_limits<double>::max(), 10);
-  TEST(std::numeric_limits<double>::denorm_min());
+  TEST(std::numeric_limits<double>::denorm_min(), 3);
 
 #undef STRIFY
 #undef TEST
