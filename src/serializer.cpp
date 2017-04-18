@@ -30,9 +30,10 @@ void serializer<bool>::write(Serializer& s, const bool b) {
 
 namespace {
   enum Type {
-    Zero,
-    Infinity,
+    // First position of enum, because it is zero, must be covered with a value for which the sign doesn't matter
     NaN,
+    Infinity,
+    Zero,
     Normal
   };
   struct float_repr {
