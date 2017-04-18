@@ -27,10 +27,12 @@ void test(const std::string& inStr, const double in, const std::ptrdiff_t expect
         AND_WHEN("we deserialize it again") {
           const auto out = serializer<decltype(+in)>::read(d);
           THEN("the deserialized output is equal to the original input") {
-            if (std::isnan(in))
+            if (std::isnan(in)) {
               CHECK(std::isnan(out));
-            else
+            } else {
               CHECK(out == in);
+              CHECK(std::signbit(out) == std::signbit(in));
+            }
           }
         }
       }
