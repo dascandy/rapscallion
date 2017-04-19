@@ -30,7 +30,6 @@ void serializer<bool>::write(Serializer& s, const bool b) {
 
 namespace {
   enum Type {
-    // First position of enum, because it is zero, must be covered with a value for which the sign doesn't matter
     NaN,
     Infinity,
     Zero,
@@ -64,6 +63,8 @@ struct serializer<float_repr> {
     switch(b.type) {
       default:
         {
+          static_assert(Type::Zero     != 0, "Cannot encode the sign of zero in the sign bit of zero on 2's complement systems");
+          static_assert(Type::Infinity != 0, "Cannot encode the sign of infinity in the sign bit of zero on 2's complement systems");
           serializer<decltype(+b.exponent)>::write(s, b.is_negative ? -b.type : b.type);
         }
         break;
