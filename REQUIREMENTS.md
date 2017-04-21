@@ -1,5 +1,7 @@
 # Requirements
 
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119][RFC2119].
+
 This is a rough sketch of the requirements this RPC framework tries to fulfill.
 
 The used protocol and framework:
@@ -23,3 +25,5 @@ The used protocol and framework:
 * MUST use only standard C++ 11
  - MUST NOT rely on later standards
  - MUST NOT use compiler/language extensions
+
+[RFC2119]: https://tools.ietf.org/html/rfc2119 "RFC 2119 - Key words for use in RFCs to Indicate Requirement Levels"
