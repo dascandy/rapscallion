@@ -23,7 +23,7 @@ The used protocol and framework:
   - Dependent requests MAY be grouped in a single socket send-call, thus maximizing the extent to which packets get filled.
     + When doing so the requests MUST still be ordered such that they only depend on requests serialized before them.
 * MUST use only standard C++ 11
- - MUST NOT rely on later standards
- - MUST NOT use compiler/language extensions
+  - MUST NOT rely on later standards
+  - MUST NOT use compiler/language extensions
 
 [RFC2119]: https://tools.ietf.org/html/rfc2119 "RFC 2119 - Key words for use in RFCs to Indicate Requirement Levels"
