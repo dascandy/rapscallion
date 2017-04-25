@@ -4,7 +4,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 This is a rough sketch of the requirements this RPC framework tries to fulfill.
 
-The used protocol and framework:
+The used transport protocol and framework:
 
 * MUST have the ability to match replies to their originating requests, e.g.  through unique identifiers.
 * SHOULD have the ability to refer to previous requests in the parameter lists of new requests as an alternative for transferring these parameters by-value.
@@ -15,6 +15,15 @@ The used protocol and framework:
       It can limit the amount of data returned, in reply messages, to those results that are desired for local processing.
   - This provides the opportunity for saving bandwidth on transmitting data that the remote peer already has access to
   - This is called "promise pipe lining"
+* MUST only rely on a single communication channel
+  - This means the protocol MUST provide for a way to distinguish different message types and the framework MUST be able to demultiplex these.
+  - For (byte) stream oriented transport protocols (e.g. TCP) this means: one socket on one port for each client.
+  - For datagram oriented transport protocols (e.g. UDP) this means: one pair of source and destination ports/addresses for each client.
+  - Performance enhancements MAY use additional parallel communication channels, correct function MUST NOT depend on that though.
+* MUST support initiating of requests in _both_ directions.
+  - This allows using requests initiated by the server to the client to be used for event notifications (i.e. pushing instead of (long) polling).
+  - It is up to the application-level protocol to dictate under which circumstances a peer is allowed to initiate requests.
+  - Only using server to client requests for events that are subscribed to is a valid option.
 * MUST return objects with interfaces like `std::future<T>` from proxy functions that perform remote calls.
 * SHOULD accept these `std::future<T>`-like objects as parameters to the proxy functions.
   - In order to support pipe lining without explicit intervention of user code.
