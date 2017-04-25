@@ -14,7 +14,7 @@ The used transport protocol and framework:
       This avoids adding the extra round-trip delay between multiple dependent requests.
       It can limit the amount of data returned, in reply messages, to those results that are desired for local processing.
   - This provides the opportunity for saving bandwidth on transmitting data that the remote peer already has access to
-  - This is called "promise pipe lining"
+  - This is called "[promise pipe lining][promise-pipelining]"
 * MUST only rely on a single communication channel
   - This means the protocol MUST provide for a way to distinguish different message types and the framework MUST be able to demultiplex these.
   - For (byte) stream oriented transport protocols (e.g. TCP) this means: one socket on one port for each client.
@@ -36,3 +36,4 @@ The used transport protocol and framework:
   - MUST NOT use compiler/language extensions
 
 [RFC2119]: https://tools.ietf.org/html/rfc2119 "RFC 2119 - Key words for use in RFCs to Indicate Requirement Levels"
+[promise-pipelining]: https://en.wikipedia.org/wiki/Futures_and_promises#Promise_pipelining "Promise pipelining"
