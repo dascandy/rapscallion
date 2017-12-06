@@ -49,7 +49,7 @@ namespace {
     b = ((b & 0xFFFFFFFF00000000ULL) >> 32) | ((b & 0x00000000FFFFFFFFULL) << 32);
     b = ((b & 0xFFFF0000FFFF0000ULL) >> 16) | ((b & 0x0000FFFF0000FFFFULL) << 16);
     b = ((b & 0xFF00FF00FF00FF00ULL) >>  8) | ((b & 0x00FF00FF00FF00FFULL) <<  8);
-    b = ((b & 0xF0F0F0F0F0F0F0F0ULL) >>  4) | ((b & 0x0F0F0F0F0F0F0F0FULL) << 4);
+    b = ((b & 0xF0F0F0F0F0F0F0F0ULL) >>  4) | ((b & 0x0F0F0F0F0F0F0F0FULL) <<  4);
     b = ((b & 0xCCCCCCCCCCCCCCCCULL) >>  2) | ((b & 0x3333333333333333ULL) <<  2);
     b = ((b & 0xAAAAAAAAAAAAAAAAULL) >>  1) | ((b & 0x5555555555555555ULL) <<  1);
     return b;

@@ -30,15 +30,12 @@ if(NOT TARGET Boost::boost)
 endif()
 
 add_library(RaPsCallion SHARED
-  include/RaPsCallion/connection.h
   include/RaPsCallion/future.h
   include/RaPsCallion/rpc.h
   include/RaPsCallion/serializer.h
   include/RaPsCallion/serializer_fwd.hpp
-  include/RaPsCallion/serverconnection.h
-  src/connection.cpp
+  src/rpc.cpp
   src/serializer.cpp
-  src/serverconnection.cpp
 )
 set_target_properties(RaPsCallion PROPERTIES OUTPUT_NAME rapscallion)
 target_include_directories(RaPsCallion
