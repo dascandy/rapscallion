@@ -13,10 +13,10 @@ namespace rapscallion {
 
 namespace Serializer_ADL {
 struct Serializer {
+  std::vector<uint8_t> buffer;
   Serializer() {
     buffer.resize(8);
   }
-  std::vector<uint8_t> buffer;
   void addByte(uint8_t b) { buffer.push_back(b); }
   std::pair<uint8_t *, size_t> data() {
     size_t len = buffer.size() - 8;
@@ -47,8 +47,8 @@ struct Deserializer {
   }
 
   Deserializer(const Serializer& s)
-    : ptr(&*s.buffer.begin() + 8)
-    , end(&*s.buffer.end())
+    : ptr(s.buffer.data() + 8)
+    , end(s.buffer.data() + s.buffer.size())
   {
     s.buffer.at(7);
   }
