@@ -1,4 +1,3 @@
-#include "serializer.hpp"
 #include <boost/asio.hpp>
 
 namespace Rapscallion {
@@ -134,6 +133,7 @@ private:
 
 struct Server {
   tcp::acceptor acceptor_;
+
   Server(boost::asio::io_service &io_service, uint16_t port, std::function<std::shared_ptr<Connection>> onConnect)
     : acceptor_(io_service, tcp::endpoint(tcp::v4(), 13))
     , onConnect(onConnect)
