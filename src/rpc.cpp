@@ -3,6 +3,19 @@
 
 namespace Rapscallion {
 
+struct RpcHost {
+  template <typename T>
+  void Register(T* handler) {
+    RegisterStub(new T::Stub(handler));
+  }
+  template <typename T>
+  T* Get(Connection* conn) {
+    T* proxy = new T::Proxy(this);
+    RegisterProxy(proxy);
+    return proxy;
+  }
+};
+
 struct Connection {
   : public boost::enable_shared_from_this<Connection>
 { 
