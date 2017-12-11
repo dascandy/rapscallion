@@ -2,6 +2,29 @@
 
 namespace Rapscallion {
 
+struct InterfaceStub {
+  virtual void Handle(Deserializer& des);
+};
+
+struct RpcHandle {
+  RpcHandle(RpcHost& host, std::shared_ptr<tcp::socket> sock) 
+  : host(host)
+  , conn(sock, [](const char* data, size_t size){ 
+      des.AddBytes(data, size);
+      while (des.HasFullPacket()) {
+        RpcHost->Handle(deserializer, this);
+        des.RemovePacket();
+      }
+    })
+  {}
+  void SendInterface(std::unique_ptr<InterfaceStub>& iface) {
+    
+  }
+  RpcHost& host;
+  std::shared_ptr<Connection> conn;
+  Deserializer des;
+};
+
 struct RpcHost {
   RpcHost(boost::asio::io_service &io_service, uint16_t port)
   : server(io_service, port, [](std::shared_ptr<tcp::socket> s){ addConnection(s); })
@@ -19,8 +42,8 @@ struct RpcHost {
     std::lock_guard<std::mutex> l(m);
     std::unique_ptr<InterfaceStub> iface = std::make_unique<T::Stub>(handler);
     RegisterStub(new T::Stub(handler));
-    for (auto& conn : connections) {
-      sendInterface(conn, interface);
+    for (auto& handle : handles) {
+      handle->sendInterface(interface);
     }
   }
   void sendInterface(std::shared_ptr<Connection>& conn, std::unique_ptr<InterfaceStub>& interface) {
@@ -28,7 +51,7 @@ struct RpcHost {
   }
   std::mutex m;
   std::vector<std::unique_ptr<InterfaceStub>> interfaces;
-  std::vector<std::shared_ptr<Connection> connections;
+  std::vector<std::shared_ptr<RpcHandle> connections;
 };
 
 struct RpcClient {
