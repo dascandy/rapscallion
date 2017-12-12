@@ -1,5 +1,4 @@
-#ifndef RPC_H
-#define RPC_H
+#pragma once
 
 #include <functional>
 #include <thread>

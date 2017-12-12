@@ -1,5 +1,4 @@
-#ifndef SERIALIZER_H
-#define SERIALIZER_H
+#pragma once
 
 #include <algorithm>
 #include <cstdint>
@@ -7,20 +6,26 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "serializer_fwd.hpp"
+#include <cstring>
 
-namespace rapscallion {
+namespace Rapscallion {
 
-namespace Serializer_ADL {
-struct Serializer {
-  std::vector<uint8_t> buffer;
+class Serializer {
+private:
+  mutable std::vector<uint8_t> buffer;
+  mutable size_t offs = 9;
+public:
   Serializer() {
     buffer.resize(8);
   }
   void addByte(uint8_t b) { buffer.push_back(b); }
-  std::pair<uint8_t *, size_t> data() {
+  uint8_t *data() const { finalize(); return buffer.data() + offs; }
+  size_t size() const { finalize(); return buffer.size() - offs; }
+private:
+  void finalize() const {
+    if (offs != 9) return;
     size_t len = buffer.size() - 8;
-    size_t offs = 7;
+    offs = 7;
     int mask = 0;
     while (len > 0x7F) {
       buffer[offs--] = mask | (len & 0x7F);
@@ -28,34 +33,19 @@ struct Serializer {
       mask = 0x80;
     }
     buffer[offs] = len | mask;
-    return std::make_pair(buffer.data() + offs, buffer.size() - offs);
   }
 };
-}
 
-namespace Deserializer_ADL {
-struct Deserializer {
-  Deserializer(const std::vector<uint8_t> &buffer, size_t offset)
-  : ptr(buffer.data() + offset)
-  {
-    uint64_t size = PacketSize(buffer, offset);
-    while (*ptr & 0x80) ptr++;
-    ptr++;
-    end = ptr + size;
-    if (end > buffer.data() + buffer.size())
-      throw std::runtime_error("Packet exceeds buffer size");
-  }
-
+class Deserializer {
+public:
+  Deserializer() {}
   Deserializer(const Serializer& s)
-    : ptr(s.buffer.data() + 8)
-    , end(s.buffer.data() + s.buffer.size())
+    : buffer(s.data(), s.data() + s.size())
   {
-    s.buffer.at(7);
   }
-
   size_t getByte() {
-    if (ptr == end) throw std::runtime_error("Exceeded packet size");
-    return *ptr++;
+    if (offs == PacketSize(buffer, 0)) throw std::runtime_error("Exceeded packet size");
+    return buffer[offs++];
   }
   static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
     int64_t len = 0;
@@ -67,15 +57,20 @@ struct Deserializer {
     }
     return -1;
   }
-  const uint8_t *ptr, *end;
-};
-}
-
-struct parse_exception : public std::exception {
-  parse_exception(const char *err) : err(err)
-  {}
-  const char *err;
-  const char *what() const throw() { return err; }
+  void AddBytes(const uint8_t *bytes, size_t size) {
+    buffer.insert(buffer.end(), bytes, bytes + size);
+  }
+  bool HasFullPacket() {
+    int64_t size = PacketSize(buffer, 0);
+    return size > 0 && size <= buffer.size();
+  }
+  void RemovePacket() {
+    int64_t size = PacketSize(buffer, 0);
+    memmove(buffer.data(), buffer.data() + size, buffer.size() - size);
+    buffer.resize(buffer.size() - size);
+  }
+  size_t offs = 0;
+  std::vector<uint8_t> buffer;
 };
 
 #define DECLARE_READER_WRITER(type) \
@@ -158,4 +153,3 @@ struct serializer<std::shared_ptr<T>> {
 
 }
 
-#endif
