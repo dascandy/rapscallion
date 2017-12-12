@@ -18,7 +18,7 @@ endif()
 
 find_package(Boost 1.38 REQUIRED COMPONENTS thread)
 if (NOT WIN32)
-  add_definitions(-Wall -Wextra -Wpedantic -Werror)
+  add_definitions(-Wall -Wextra -Wpedantic -Werror -Wshadow)
 endif()
 
 # The Boost::<C> IMPORT targets aren't added until CMake 3.5

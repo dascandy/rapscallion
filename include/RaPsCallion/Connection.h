@@ -11,22 +11,22 @@ struct Connection
 { 
   static constexpr size_t buffersize = 16384;
   Connection(std::shared_ptr<boost::asio::ip::tcp::socket> socket, std::function<void(const char*, size_t)> onRead)
-    : socket(socket)
-    , onRead(onRead)
+    : socket_(socket)
+    , onRead_(onRead)
   {
   }
 
   boost::asio::ip::tcp::socket& getSocket() {
-    return *socket.get();
+    return *socket_.get();
   }
 
   void start() {
-    socket->async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
+    socket_->async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
       handle_read(error, transferred);
     });
   }
 
-  void write(const char* buffer, size_t size) {
+  void write(const char* data, size_t size) {
     // We cannot send packets larger than the buffer size, as we cannot guarantee no interleaving happens.
     if (size > buffersize) throw std::runtime_error("Packet too large for connection");
     std::lock_guard<std::mutex> l(writeMutex);
@@ -34,7 +34,7 @@ struct Connection
     // TODO: wait on cond var for connection to have enough space for this as a single write in the buffer
 
 
-    memcpy(currentWrite + writeoff, buffer, size);
+    memcpy(currentWrite + writeoff, data, size);
     writeoff += size;
     if (!writeActive) {
       queueWrite(l);
@@ -44,9 +44,9 @@ struct Connection
 private:
   void handle_read(const boost::system::error_code& error, size_t bytes_transferred) {
     if (!error) {
-      onRead(buffer, bytes_transferred);
+      onRead_(buffer, bytes_transferred);
       auto self = shared_from_this();
-      socket->async_read_some(boost::asio::buffer(buffer, buffersize), 
+      socket_->async_read_some(boost::asio::buffer(buffer, buffersize), 
         [this, self](const boost::system::error_code& err, size_t transferred){ 
           handle_read(err, transferred);
         }
@@ -56,7 +56,7 @@ private:
 
   void queueWrite(const std::lock_guard<std::mutex>&) {
     auto self = shared_from_this();
-    boost::asio::async_write(*socket.get(), boost::asio::buffer(currentWrite, writeoff), 
+    boost::asio::async_write(*socket_.get(), boost::asio::buffer(currentWrite, writeoff), 
       [this, self](const boost::system::error_code& err, size_t ) { 
         handle_write(err); 
       }
@@ -79,7 +79,7 @@ private:
   }
 
 private:
-  std::shared_ptr<boost::asio::ip::tcp::socket> socket;
+  std::shared_ptr<boost::asio::ip::tcp::socket> socket_;
   char buffer[buffersize];
   char writebuffer1[buffersize];
   char writebuffer2[buffersize];
@@ -87,7 +87,7 @@ private:
   char* currentWrite = writebuffer1;
   std::mutex writeMutex;
   bool writeActive = false;
-  std::function<void(const char*, size_t)> onRead;
+  std::function<void(const char*, size_t)> onRead_;
 };
 
 }
