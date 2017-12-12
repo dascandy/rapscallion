@@ -16,8 +16,7 @@ if(CMAKE_VERSION VERSION_LESS "3.4")
   enable_language(C)
 endif()
 
-find_package(Boost 1.38 REQUIRED)
-find_package(Threads REQUIRED)
+find_package(Boost 1.38 REQUIRED COMPONENTS thread)
 if (NOT WIN32)
   add_definitions(-Wall -Wextra -Wpedantic -Werror)
 endif()
@@ -47,7 +46,7 @@ target_include_directories(RaPsCallion
 target_link_libraries(RaPsCallion
   PRIVATE
     Boost::boost
-    Threads::Threads
+    Boost::thread
 )
 
 add_subdirectory(test)
