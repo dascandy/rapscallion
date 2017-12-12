@@ -28,15 +28,15 @@ struct RpcHost {
   template <typename T>
   void Register(T* handler) {
     std::lock_guard<std::mutex> l(m);
-    std::unique_ptr<InterfaceDispatcher> iface = boost::make_unique<T::Dispatcher>(handler);
-    RegisterDispatcher(new typename T::Dispatcher(handler));
+    interfaces.emplace_back(boost::make_unique<typename T::Dispatcher>(handler));
     for (auto& handle : handles) {
-      handle->SendInterface(iface);
+      handle->SendInterface(interfaces.back());
     }
   }
   void Handle(Deserializer& deserializer, RpcHandle& handle) {
     std::lock_guard<std::mutex> l(m);
     std::string ifId = serializer<std::string>::read(deserializer);
+    printf("%s\n", __PRETTY_FUNCTION__);
     for (auto& iface : interfaces) {
       if (iface->getInterfaceName() == ifId) {
         iface->Handle(deserializer, handle);

@@ -55,3 +55,4 @@ target_link_libraries(RaPsCallion
 )
 
 add_subdirectory(test)
+add_subdirectory(app)

@@ -6,6 +6,7 @@ namespace Rapscallion {
 
 RpcHandle::RpcHandle(RpcHost& host, std::shared_ptr<boost::asio::ip::tcp::socket> sock)
 : conn(std::make_shared<Connection>(sock, [&host, this](const char* data, size_t size){
+  printf("%s\n", __PRETTY_FUNCTION__);
   des.AddBytes(reinterpret_cast<const uint8_t*>(data), size);
   while (des.HasFullPacket()) {
     host.Handle(des, *this);
@@ -13,6 +14,7 @@ RpcHandle::RpcHandle(RpcHost& host, std::shared_ptr<boost::asio::ip::tcp::socket
   }
 }))
 {
+  conn->start();
 }
 
 void RpcHandle::SendInterface(std::unique_ptr<InterfaceDispatcher>& iface) {

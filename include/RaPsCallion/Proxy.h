@@ -11,6 +11,7 @@
 #include "future.h"
 #include "Serializer.h"
 #include "RpcClient.h"
+#include "InterfaceProxy.h"
 
 namespace Rapscallion {
 
@@ -19,28 +20,21 @@ class IProxy;
 class IHasDispatch;
 class RpcClient;
 
-class IProxy : public std::enable_shared_from_this<IProxy> {
-public:
-  virtual void signalDisconnect() = 0;
-  virtual void dispatch(Deserializer& s) = 0;
-  virtual ~IProxy() {}
-};
-
 template <typename I>
-class ProxyBase : public I, public IProxy {
+class ProxyBase : public I, public InterfaceProxy {
 public:
   template <typename T>
-  static constexpr std::string interfaceNameOf() {
+  static std::string interfaceNameOf() {
     const char *str = typeid(T).name();
     while (*str && *str <= '9') ++str;
     return str;
   }
   std::string interfaceName = interfaceNameOf<I>();
-  std::string getInterfaceName() { 
+  const std::string& getInterfaceName() { 
     return interfaceName;
   }
-  ProxyBase(std::shared_ptr<RpcClient> conn)
-  : conn(conn)
+  ProxyBase(RpcClient& conn)
+  : conn_(&conn)
   {
   }
   void signalDisconnect() {
@@ -49,50 +43,56 @@ public:
       p.second(s);
     }
     callbacks.clear();
-    conn = NULL;
+    conn_ = NULL;
   }
 protected:
   size_t getRequestId() {
-    std::unique_lock<std::mutex> lock(cbM);
-    return requestId++;
+    return newRequestId++;
   }
   template <typename T> future<T> getFutureFor(size_t requestId) {
-    std::unique_lock<std::mutex> lock(cbM);
+  printf("%s\n", __PRETTY_FUNCTION__); 
     std::shared_ptr<promise<T>> value = std::make_shared<promise<T>>();
     future<T> rv = value->get_future();
     callbacks[requestId] = [value](Deserializer&s){
       try {
         value->set_value(serializer<T>::read(s));
+  printf("%s\n", __PRETTY_FUNCTION__); 
       } catch (...) {
+  printf("%s\n", __PRETTY_FUNCTION__); 
         value->set_exception(std::current_exception());
       }
     };
     return rv;
   }
 public:
-  void dispatch(Deserializer& s) override {
+  void Handle(Deserializer& s) override {
     std::function<void(Deserializer&)> cb;
     {
+  printf("%s\n", __PRETTY_FUNCTION__); 
       std::unique_lock<std::mutex> lock(cbM);
       size_t id = serializer<size_t>::read(s);
       auto it = callbacks.find(id);
       if (it == callbacks.end()) {
-        printf("No callback found for requestID %zu on %p/%p interface %s\n", id, (void*)this, (void*)conn.get(), getInterfaceName().c_str());
+        printf("No callback found for requestID %zu on %p/%p interface %s\n", id, (void*)this, (void*)&conn_, getInterfaceName().c_str());
         return;
       }
       cb = it->second;
       callbacks.erase(it);
     }
+  printf("%s\n", __PRETTY_FUNCTION__); 
     cb(s);
   }
-  std::shared_ptr<RpcClient> conn;
+  RpcClient* conn_;
 private:
-  size_t requestId = 0;
+  size_t newRequestId = 0;
   std::map<size_t, std::function<void(Deserializer&)>> callbacks;
+public:
   std::mutex cbM;
 };
 
 #define PROXY_PROLOG(name, type)  \
+  std::unique_lock<std::mutex> lock(cbM); \
+  printf("%s\n", __PRETTY_FUNCTION__); \
   size_t reqId = getRequestId(); \
   future<type> f = getFutureFor<type>(reqId); \
   Rapscallion::Serializer s; \
@@ -100,7 +100,7 @@ private:
   Rapscallion::serializer<std::string>::write(s, #name); \
   Rapscallion::serializer<size_t>::write(s, reqId);
 #define PROXY_EPILOG(type) \
-  conn->Send(s); \
+  conn_->Send(s); \
   return f;
 #define PROXY_FUNC0(name, type) future<type> name() override { PROXY_PROLOG(name, type) PROXY_EPILOG(type) }
 #define PROXY_FUNC1(name, type, a1) future<type> name(a1 A1) override { PROXY_PROLOG(name, type) Rapscallion::serializer<a1>::write(s, A1); PROXY_EPILOG(type) }
