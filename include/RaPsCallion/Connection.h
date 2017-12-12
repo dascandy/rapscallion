@@ -10,18 +10,18 @@ struct Connection
   : public std::enable_shared_from_this<Connection>
 { 
   static constexpr size_t buffersize = 16384;
-  Connection(std::shared_ptr<boost::asio::ip::tcp::socket> socket, std::function<void(const char*, size_t)> onRead)
-    : socket_(socket)
+  Connection(boost::asio::ip::tcp::socket socket, std::function<void(const char*, size_t)> onRead)
+    : socket_(std::move(socket))
     , onRead_(onRead)
   {
   }
 
   boost::asio::ip::tcp::socket& getSocket() {
-    return *socket_.get();
+    return socket_;
   }
 
   void start() {
-    socket_->async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
+    socket_.async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
       handle_read(error, transferred);
     });
   }
@@ -46,7 +46,7 @@ private:
     if (!error) {
       onRead_(buffer, bytes_transferred);
       auto self = shared_from_this();
-      socket_->async_read_some(boost::asio::buffer(buffer, buffersize), 
+      socket_.async_read_some(boost::asio::buffer(buffer, buffersize), 
         [this, self](const boost::system::error_code& err, size_t transferred){ 
           handle_read(err, transferred);
         }
@@ -56,7 +56,7 @@ private:
 
   void queueWrite(const std::lock_guard<std::mutex>&) {
     auto self = shared_from_this();
-    boost::asio::async_write(*socket_.get(), boost::asio::buffer(currentWrite, writeoff), 
+    boost::asio::async_write(socket_, boost::asio::buffer(currentWrite, writeoff), 
       [this, self](const boost::system::error_code& err, size_t ) { 
         handle_write(err); 
       }
@@ -79,7 +79,7 @@ private:
   }
 
 private:
-  std::shared_ptr<boost::asio::ip::tcp::socket> socket_;
+  boost::asio::ip::tcp::socket socket_;
   char buffer[buffersize];
   char writebuffer1[buffersize];
   char writebuffer2[buffersize];

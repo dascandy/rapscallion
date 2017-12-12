@@ -41,7 +41,6 @@ protected:
 };
 
 #define DISPATCH_PROLOG(name)  \
-  printf("%s\n", __PRETTY_FUNCTION__); \
   funcs[#name] = [this](Rapscallion::Deserializer&s, Rapscallion::RpcHandle& c){ \
   size_t reqId = Rapscallion::serializer<size_t>::read(s); 
 #define DISPATCH_EPILOG(rv)  \

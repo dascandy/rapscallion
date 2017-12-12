@@ -50,15 +50,12 @@ protected:
     return newRequestId++;
   }
   template <typename T> future<T> getFutureFor(size_t requestId) {
-  printf("%s\n", __PRETTY_FUNCTION__); 
     std::shared_ptr<promise<T>> value = std::make_shared<promise<T>>();
     future<T> rv = value->get_future();
     callbacks[requestId] = [value](Deserializer&s){
       try {
         value->set_value(serializer<T>::read(s));
-  printf("%s\n", __PRETTY_FUNCTION__); 
       } catch (...) {
-  printf("%s\n", __PRETTY_FUNCTION__); 
         value->set_exception(std::current_exception());
       }
     };
@@ -68,7 +65,6 @@ public:
   void Handle(Deserializer& s) override {
     std::function<void(Deserializer&)> cb;
     {
-  printf("%s\n", __PRETTY_FUNCTION__); 
       std::unique_lock<std::mutex> lock(cbM);
       size_t id = serializer<size_t>::read(s);
       auto it = callbacks.find(id);
@@ -79,7 +75,6 @@ public:
       cb = it->second;
       callbacks.erase(it);
     }
-  printf("%s\n", __PRETTY_FUNCTION__); 
     cb(s);
   }
   RpcClient* conn_;
@@ -92,7 +87,6 @@ public:
 
 #define PROXY_PROLOG(name, type)  \
   std::unique_lock<std::mutex> lock(cbM); \
-  printf("%s\n", __PRETTY_FUNCTION__); \
   size_t reqId = getRequestId(); \
   future<type> f = getFutureFor<type>(reqId); \
   Rapscallion::Serializer s; \

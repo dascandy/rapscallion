@@ -4,9 +4,8 @@
 
 namespace Rapscallion {
 
-RpcHandle::RpcHandle(RpcHost& host, std::shared_ptr<boost::asio::ip::tcp::socket> sock)
-: conn(std::make_shared<Connection>(sock, [&host, this](const char* data, size_t size){
-  printf("%s\n", __PRETTY_FUNCTION__);
+RpcHandle::RpcHandle(RpcHost& host, boost::asio::ip::tcp::socket sock)
+: conn(std::make_shared<Connection>(std::move(sock), [&host, this](const char* data, size_t size){
   des.AddBytes(reinterpret_cast<const uint8_t*>(data), size);
   while (des.HasFullPacket()) {
     host.Handle(des, *this);

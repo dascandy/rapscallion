@@ -15,9 +15,9 @@ struct RpcHandle;
 
 struct RpcHost {
   RpcHost(boost::asio::io_service &io_service, uint16_t port)
-  : server(io_service, port, [this](std::shared_ptr<boost::asio::ip::tcp::socket> s){ addSocket(s); })
+  : server(io_service, port, [this](boost::asio::ip::tcp::socket s){ addSocket(std::move(s)); })
   {}
-  void addSocket(std::shared_ptr<boost::asio::ip::tcp::socket> socket) {
+  void addSocket(boost::asio::ip::tcp::socket socket) {
     std::lock_guard<std::mutex> l(m);
     std::shared_ptr<RpcHandle> handle = std::make_shared<RpcHandle>(*this, std::move(socket));
     handles.push_back(handle);
@@ -36,7 +36,6 @@ struct RpcHost {
   void Handle(Deserializer& deserializer, RpcHandle& handle) {
     std::lock_guard<std::mutex> l(m);
     std::string ifId = serializer<std::string>::read(deserializer);
-    printf("%s\n", __PRETTY_FUNCTION__);
     for (auto& iface : interfaces) {
       if (iface->getInterfaceName() == ifId) {
         iface->Handle(deserializer, handle);
