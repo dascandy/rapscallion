@@ -1,9 +1,9 @@
 #include <catch/catch.hpp>
 #include <cmath>
 #include <limits>
-#include <RaPsCallion/serializer.h>
+#include <Serializer.h>
 
-namespace rapscallion {
+namespace Rapscallion {
 namespace test {
 
 struct byte_view
@@ -11,8 +11,8 @@ struct byte_view
   constexpr byte_view() = default;
 
   byte_view(const Deserializer& d)
-    : first(reinterpret_cast<const char*>(d.ptr))
-    , last (reinterpret_cast<const char*>(d.end))
+    : first(reinterpret_cast<const char*>(d.buffer.data()))
+    , last (reinterpret_cast<const char*>(d.buffer.data() + d.buffer.size()))
   {}
 
   template <size_t N>
@@ -93,7 +93,7 @@ void test(const std::string& inStr, const double in, const byte_view& expected_s
 }
 
 SCENARIO("Serializing floating point numbers", "[serialization]") {
-  using namespace rapscallion::test;
+  using namespace Rapscallion::test;
 
 #define STRIFY1ST(num, ...) #num
 #define TEST(...) \

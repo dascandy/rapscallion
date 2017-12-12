@@ -7,21 +7,21 @@
 namespace Rapscallion {
 
 struct Connection
-  : public boost::enable_shared_from_this<Connection>
+  : public std::enable_shared_from_this<Connection>
 { 
   static constexpr size_t buffersize = 16384;
-  Connection(boost::asio::ip::tcp::socket&& socket, std::function<void(const char*, size_t)> onRead)
-    : socket(std::move(socket))
+  Connection(std::shared_ptr<boost::asio::ip::tcp::socket> socket, std::function<void(const char*, size_t)> onRead)
+    : socket(socket)
     , onRead(onRead)
   {
   }
 
   boost::asio::ip::tcp::socket& getSocket() {
-    return socket;
+    return *socket.get();
   }
 
   void start() {
-    socket.async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
+    socket->async_read_some(boost::asio::buffer(buffer, buffersize), [this](const boost::system::error_code& error, size_t transferred) {
       handle_read(error, transferred);
     });
   }
@@ -45,8 +45,9 @@ private:
   void handle_read(const boost::system::error_code& error, size_t bytes_transferred) {
     if (!error) {
       onRead(buffer, bytes_transferred);
-      socket.async_read_some(boost::asio::buffer(buffer, buffersize), 
-        [this, self = shared_from_this()](const boost::system::error_code& err, size_t transferred){ 
+      auto self = shared_from_this();
+      socket->async_read_some(boost::asio::buffer(buffer, buffersize), 
+        [this, self](const boost::system::error_code& err, size_t transferred){ 
           handle_read(err, transferred);
         }
       );
@@ -54,8 +55,9 @@ private:
   }
 
   void queueWrite(const std::lock_guard<std::mutex>&) {
-    boost::asio::async_write(socket, boost::asio::buffer(currentWrite, writeoff), 
-      [this, self = shared_from_this()](const boost::system::error_code& err, size_t written) { 
+    auto self = shared_from_this();
+    boost::asio::async_write(*socket.get(), boost::asio::buffer(currentWrite, writeoff), 
+      [this, self](const boost::system::error_code& err, size_t ) { 
         handle_write(err); 
       }
     );
@@ -77,7 +79,7 @@ private:
   }
 
 private:
-  boost::asio::ip::tcp::socket socket;
+  std::shared_ptr<boost::asio::ip::tcp::socket> socket;
   char buffer[buffersize];
   char writebuffer1[buffersize];
   char writebuffer2[buffersize];

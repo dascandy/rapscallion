@@ -25,7 +25,7 @@ protected:
     return str;
   }
   std::string interfaceName = interfaceNameOf();
-  std::string getInterfaceName() { 
+  const std::string &getInterfaceName() { 
     return interfaceName;
   }
   void Handle(Deserializer& des, RpcHandle& handle) override {

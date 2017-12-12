@@ -44,8 +44,14 @@ public:
   {
   }
   size_t getByte() {
-    if (offs == PacketSize(buffer, 0)) throw std::runtime_error("Exceeded packet size");
+    if (offs == static_cast<uint64_t>(PacketSize(buffer, 0))) throw std::runtime_error("Exceeded packet size");
     return buffer[offs++];
+  }
+  uint8_t *getByteRange(size_t byteCount) {
+    if (offs + byteCount > static_cast<uint64_t>(PacketSize(buffer, 0))) throw std::runtime_error("Exceeded packet size");
+    size_t oldOffs = offs;
+    offs += byteCount;
+    return buffer.data() + oldOffs;
   }
   static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
     int64_t len = 0;
@@ -62,7 +68,7 @@ public:
   }
   bool HasFullPacket() {
     int64_t size = PacketSize(buffer, 0);
-    return size > 0 && size <= buffer.size();
+    return size > 0 && static_cast<uint64_t>(size) <= buffer.size();
   }
   void RemovePacket() {
     int64_t size = PacketSize(buffer, 0);

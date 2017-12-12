@@ -1,10 +1,10 @@
-#include "serializer.h"
+#include "Serializer.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
 
-namespace rapscallion {
+namespace Rapscallion {
 
 void serializer<std::uint_least64_t>::write(Serializer& s, std::uint_least64_t value) {
   while (value >= 0x80) {
@@ -166,12 +166,8 @@ int serializer<int>::read(Deserializer& s) {
 }
 std::string serializer<std::string>::read(Deserializer& s) {
   const auto length = serializer<std::uint_least64_t>::read(s);
-  const uint8_t* ptr = s.ptr;
-  const uint8_t* end = ptr + length;
-  if (end > s.end) 
-    throw parse_exception("buffer underrun");
-  s.ptr = end;
-  return std::string(reinterpret_cast<const char*>(ptr), length);
+  const uint8_t* range = s.getByteRange(length);
+  return std::string(reinterpret_cast<const char*>(range), length);
 }
 bool serializer<bool>::read(Deserializer& s) {
   return serializer<std::uint_least64_t>::read(s) > 0;

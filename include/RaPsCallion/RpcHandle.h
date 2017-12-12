@@ -8,6 +8,7 @@ namespace Rapscallion {
 
 class RpcHost;
 class Connection;
+class InterfaceDispatcher;
 
 struct RpcHandle {
   RpcHandle(RpcHost& host, std::shared_ptr<boost::asio::ip::tcp::socket> sock);
