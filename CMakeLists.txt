@@ -16,8 +16,7 @@ if(CMAKE_VERSION VERSION_LESS "3.4")
   enable_language(C)
 endif()
 
-find_package(Boost 1.38 REQUIRED)
-find_package(Threads REQUIRED)
+find_package(Boost 1.38 REQUIRED COMPONENTS thread)
 if (NOT WIN32)
   add_definitions(-Wall -Wextra -Wpedantic -Werror)
 endif()
@@ -30,19 +29,19 @@ if(NOT TARGET Boost::boost)
 endif()
 
 add_library(RaPsCallion SHARED
-  src/Serializer.cpp
-  src/RpcHandle.cpp
-  include/RaPsCallion/InterfaceDispatcher.h
-  include/RaPsCallion/Proxy.h
-  include/RaPsCallion/Serializer.h
   include/RaPsCallion/Connection.h
-  include/RaPsCallion/RpcHandle.h
-  include/RaPsCallion/RpcClient.h
   include/RaPsCallion/Dispatcher.h
-  include/RaPsCallion/Server.h
-  include/RaPsCallion/RpcHost.h
-  include/RaPsCallion/InterfaceProxy.h
   include/RaPsCallion/future.h
+  include/RaPsCallion/InterfaceDispatcher.h
+  include/RaPsCallion/InterfaceProxy.h
+  include/RaPsCallion/Proxy.h
+  include/RaPsCallion/RpcClient.h
+  include/RaPsCallion/RpcHandle.h
+  include/RaPsCallion/RpcHost.h
+  include/RaPsCallion/Serializer.h
+  include/RaPsCallion/Server.h
+  src/RpcHandle.cpp
+  src/Serializer.cpp
 )
 set_target_properties(RaPsCallion PROPERTIES OUTPUT_NAME rapscallion)
 target_include_directories(RaPsCallion
@@ -52,7 +51,7 @@ target_include_directories(RaPsCallion
 target_link_libraries(RaPsCallion
   PRIVATE
     Boost::boost
-    Threads::Threads
+    Boost::thread
 )
 
 add_subdirectory(test)
