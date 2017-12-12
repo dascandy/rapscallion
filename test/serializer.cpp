@@ -64,7 +64,8 @@ void test(const std::string& inStr, const double in, const std::ptrdiff_t expect
         //  (11 exponent bits + exponent sign + NaN/inf flag) = 13 bits / 7 bit/byte = 2 byte
         //  (52 bit fraction + sign) = 53 bits / 7 bit/byte = 8 byte
         // + = 10 byte
-        CHECK(serialized.size() <= 10);
+        // plus one byte for the prefixed size
+        CHECK(serialized.size() <= 11);
 
         if (!expected_serialization.empty())
           CHECK(serialized == expected_serialization);
@@ -100,35 +101,35 @@ SCENARIO("Serializing floating point numbers", "[serialization]") {
   test(STRIFY1ST(__VA_ARGS__, void), __VA_ARGS__)
 
   // Smallest encodings, only requiring flags
-  TEST( std::numeric_limits<double>::infinity(), "\x02");
-  TEST(-std::numeric_limits<double>::infinity(), "\x03");
-  TEST(std::numeric_limits<double>::quiet_NaN(), "\x00");
-  TEST( 0.0, "\x04");
-  TEST(-0.0, "\x05");
+  TEST( std::numeric_limits<double>::infinity(), "\x01\x02");
+  TEST(-std::numeric_limits<double>::infinity(), "\x01\x03");
+  TEST(std::numeric_limits<double>::quiet_NaN(), "\x01\x00");
+  TEST( 0.0, "\x01\x04");
+  TEST(-0.0, "\x01\x05");
 
-  TEST( 0.03125, "\x15" "\x01");
-  TEST(-0.03125, "\x17" "\x01");
-  TEST( 0.0625 , "\x11" "\x01");
-  TEST(-0.0625 , "\x13" "\x01");
-  TEST( 0.125  , "\x0d" "\x01");
-  TEST(-0.125  , "\x0f" "\x01");
-  TEST( 0.25   , "\x09" "\x01");
-  TEST(-0.25   , "\x0b" "\x01");
-  TEST( 0.5    , "\x06" "\x01");
-  TEST(-0.5    , "\x08" "\x01");
-  TEST( 1.0    , "\x0a" "\x01");
-  TEST(-1.0    , "\x0c" "\x01");
-  TEST( 2.0    , "\x0e" "\x01");
-  TEST(-2.0    , "\x10" "\x01");
+  TEST( 0.03125, "\x02\x15\x01");
+  TEST(-0.03125, "\x02\x17\x01");
+  TEST( 0.0625 , "\x02\x11\x01");
+  TEST(-0.0625 , "\x02\x13\x01");
+  TEST( 0.125  , "\x02\x0d\x01");
+  TEST(-0.125  , "\x02\x0f\x01");
+  TEST( 0.25   , "\x02\x09\x01");
+  TEST(-0.25   , "\x02\x0b\x01");
+  TEST( 0.5    , "\x02\x06\x01");
+  TEST(-0.5    , "\x02\x08\x01");
+  TEST( 1.0    , "\x02\x0a\x01");
+  TEST(-1.0    , "\x02\x0c\x01");
+  TEST( 2.0    , "\x02\x0e\x01");
+  TEST(-2.0    , "\x02\x10\x01");
 
-  TEST(M_PI, 9);
-  TEST(-M_PI, 9);
-  TEST((float)M_PI, 5);
-  TEST(-(float)M_PI, 5);
-  TEST(std::numeric_limits<double>::epsilon(), 3);
-  TEST(std::numeric_limits<double>::min(), 3);
-  TEST(std::numeric_limits<double>::max(), 10);
-  TEST(std::numeric_limits<double>::denorm_min(), 3);
+  TEST(M_PI, 10);
+  TEST(-M_PI, 10);
+  TEST((float)M_PI, 6);
+  TEST(-(float)M_PI, 6);
+  TEST(std::numeric_limits<double>::epsilon(), 4);
+  TEST(std::numeric_limits<double>::min(), 4);
+  TEST(std::numeric_limits<double>::max(), 11);
+  TEST(std::numeric_limits<double>::denorm_min(), 4);
 
 #undef STRIFY
 #undef TEST

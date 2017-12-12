@@ -42,39 +42,39 @@ public:
   Deserializer(const Serializer& s)
     : buffer(s.data(), s.data() + s.size())
   {
+    HasFullPacket();
   }
   size_t getByte() {
-    if (offs == static_cast<uint64_t>(PacketSize(buffer, 0))) throw std::runtime_error("Exceeded packet size");
+    if (offs == size) throw std::runtime_error("Exceeded packet size");
     return buffer[offs++];
   }
   uint8_t *getByteRange(size_t byteCount) {
-    if (offs + byteCount > static_cast<uint64_t>(PacketSize(buffer, 0))) throw std::runtime_error("Exceeded packet size");
+    if (offs + byteCount > size) throw std::runtime_error("Exceeded packet size");
     size_t oldOffs = offs;
     offs += byteCount;
     return buffer.data() + oldOffs;
   }
-  static int64_t PacketSize(const std::vector<uint8_t>& vec, size_t offs) {
-    int64_t len = 0;
-    while (offs < vec.size()) {
-      len = (len << 7) | (vec[offs] & 0x7F);
-      if ((vec[offs] & 0x80) == 0)
-        return len;
-      offs++;
-    }
-    return -1;
-  }
-  void AddBytes(const uint8_t *bytes, size_t size) {
-    buffer.insert(buffer.end(), bytes, bytes + size);
+  void AddBytes(const uint8_t *bytes, size_t addedSize) {
+    buffer.insert(buffer.end(), bytes, bytes + addedSize);
   }
   bool HasFullPacket() {
-    int64_t size = PacketSize(buffer, 0);
-    return size > 0 && static_cast<uint64_t>(size) <= buffer.size();
+    offs = 0; size = 0;
+    while (offs < buffer.size()) {
+      size = (size << 7) | (buffer[offs] & 0x7F);
+      if ((buffer[offs] & 0x80) == 0) {
+        offs++;
+        size += offs;
+        return (buffer.size() + offs >= size);
+      }
+      offs++;
+    }
+    return false;
   }
   void RemovePacket() {
-    int64_t size = PacketSize(buffer, 0);
     memmove(buffer.data(), buffer.data() + size, buffer.size() - size);
     buffer.resize(buffer.size() - size);
   }
+  size_t size = 0;
   size_t offs = 0;
   std::vector<uint8_t> buffer;
 };
