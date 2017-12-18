@@ -4,7 +4,7 @@
 # error boost::future<T> not provided instead of boost::unique_future<T>
 #endif
 #ifndef BOOST_THREAD_PROVIDES_EXECUTORS
-# error boost::future<T> doesn't provide executors
+# error boost::future<T> does not provide executors
 #endif
 #ifndef BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
 # error boost::when_(all|any)(boost::future<T>...) not provided
