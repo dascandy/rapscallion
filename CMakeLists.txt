@@ -53,6 +53,13 @@ target_link_libraries(RaPsCallion
     Boost::boost
     Boost::thread
 )
+target_compile_definitions(RaPsCallion
+  PUBLIC
+    BOOST_THREAD_PROVIDES_FUTURE
+    BOOST_THREAD_PROVIDES_EXECUTORS
+    BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
+    BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+)
 
 add_subdirectory(test)
 add_subdirectory(app)
